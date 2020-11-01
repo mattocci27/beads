@@ -1,0 +1,257 @@
+```{r}
+library(tidyverse)
+library(picante)
+library(factoextra)
+library(mvtnorm)
+```
+# Trait
+
+```{r}
+rm(list = ls())
+t <- read_csv("data/trait.csv")
+
+sp <- t$Species
+
+t2 <- t %>%
+  pivot_longer(2:7, names_to = "trait") 
+
+ggplot(t2, aes(x = value)) +
+  geom_histogram() +
+  facet_wrap(~ trait, scale = "free")
+  
+ggplot(t2, aes(x = value)) +
+  geom_histogram() +
+  scale_x_log10() +
+  facet_wrap(~ trait, scale = "free")
+
+
+pca_res <- prcomp(t[,-1] %>% log, scale = TRUE)
+fviz_pca_biplot(pca_res, 
+                axis = c(1, 2),
+                axes.linetype = "dotted", 
+                col.var = "black", 
+                alpha.var = 0.9,
+                pointsize = 2.5, 
+                alpha.ind = 0.9, 
+                geom.ind = "point",
+                palette = c("#7570b3", "#1b9e77"),
+                addEllipses = TRUE,
+                ellipse.level = 0.95, 
+                title = "", 
+                arrowsize = 0.5, 
+                #labelsize = 2, 
+                label = "all",
+                mean.point = FALSE,
+                repel = TRUE)
+```
+
+
+## Simple Covariance
+
+```{r}
+set.seed(123)
+d <- read_csv("data/nature02403-s2.csv", skip = 10)
+
+data <- tibble(sp = d[ , "Species"] %>% unlist,
+         logLL = d$`log LL`,
+         logLMA = d$`log LMA`,
+         logAmass = d$`log Amass`,
+         logNmass = d$`log Nmass`,
+         logPmass = d$`log Pmass`,
+         logRmass = d$`log Rdmass`)
+
+
+
+tm <- data[,-1] %>% 
+  drop_na %>%
+  as.matrix
+
+means <- apply(tm, 2, function(x){mean(x, na.rm = TRUE)})
+sds <- apply(tm, 2, function(x){sd(x, na.rm = TRUE)})
+
+tm2 <- scale(tm)
+S <- t(tm2) %*% tm2 / ncol(tm - 1)
+S2 <- cov2cor(S)
+S3 <- S2
+for (i in 1:length(sds)) S3[i, ] <- S3[i, ] * sds[i]
+for (i in 1:length(sds)) S3[, i] <- S3[, i] * sds[i]
+
+trait <- 10^rmvnorm(length(sp), means, S3) %>%
+  as_tibble 
+
+trait %>%
+  pivot_longer(1:6, names_to = "trait") %>%
+  ggplot(., aes(x = value)) +
+  geom_histogram() +
+  facet_wrap(~ trait, scale = "free") 
+  
+trait %>%
+  pivot_longer(1:6, names_to = "trait") %>%
+  ggplot(., aes(x = value)) +
+  geom_histogram() +
+  scale_x_log10() +
+  facet_wrap(~ trait, scale = "free") 
+
+pca_res <- prcomp(trait %>% log, scale = TRUE)
+
+fviz_pca_biplot(pca_res, 
+                axis = c(1, 2),
+                axes.linetype = "dotted", 
+                col.var = "black", 
+                alpha.var = 0.9,
+                pointsize = 2.5, 
+                alpha.ind = 0.9, 
+                geom.ind = "point",
+                palette = c("#7570b3", "#1b9e77"),
+                addEllipses = TRUE,
+                ellipse.level = 0.95, 
+                title = "", 
+                arrowsize = 0.5, 
+                #labelsize = 2, 
+                label = "all",
+                mean.point = FALSE,
+                repel = TRUE)
+```
+
+## Mass artifact
+
+```{r}
+
+LMA <- 10^data$logLMA %>% 
+  na.omit %>%
+  as.numeric
+
+LL <- rlnorm(length(LMA), 
+             -1.3 + 1.1 * log(LMA),
+             sd(data$logLL, na.rm = TRUE)
+)
+
+data %>%
+  mutate(logLMA_inv = -logLMA) %>%
+  lm(logAmass ~ logLMA_inv, .)
+
+Amass <- rlnorm(length(LMA),
+               log(11642  / LMA) - 0.55^2 /2,
+               0.55)
+
+Rmass <- rlnorm(length(LMA),
+               log(1402  / LMA) - 0.5^2 /2,
+               0.5)
+
+Nmass <- rlnorm(length(LMA),
+               log(1.94  / LMA) - 0.46^2 /2,
+               0.46)
+
+Pmass <- rlnorm(length(LMA),
+               log(0.1305  / LMA) - 0.6^2 /2,
+               0.6)
+
+WD <- rlnorm(length(LMA), 
+             log(0.5) - 0.2^2 / 2., 0.2
+)
+
+SM <- rlnorm(length(LMA), 
+             log(2.3) - 1^2 / 2., 1
+)
+
+
+data2 <- tibble(
+ LMA,
+ LL,
+ Amass,
+ Rmass,
+ Nmass = Nmass * 100,
+ Pmass = Pmass * 100,
+ WD, 
+ SM
+)
+
+dummy_trait <- data2 %>%
+  round(2) %>%
+  sample_n(length(sp))
+
+pca_res <- prcomp(data2 %>% log, scale = TRUE)
+
+fviz_pca_biplot(pca_res, 
+                axis = c(1, 2),
+                axes.linetype = "dotted", 
+                col.var = "black", 
+                alpha.var = 0.9,
+                pointsize = 2.5, 
+                alpha.ind = 0.1, 
+                geom.ind = "point",
+                palette = c("#7570b3", "#1b9e77"),
+                addEllipses = TRUE,
+                ellipse.level = 0.95, 
+                title = "", 
+                arrowsize = 0.5, 
+                #labelsize = 2, 
+                label = "all",
+                mean.point = FALSE,
+                repel = TRUE)
+
+```
+
+# Phylo
+
+```{r}
+tr <- read.tree("data/qjzad.tre")
+tr_dist <- vcv(tr) %>% cov2cor
+
+phy_tr <- rmvnorm(2, rep(0, ncol(tr_dist)), tr_dist)
+
+tmp <- tibble(tmp = phy_tr[1, ], sp = colnames(tr_dist)) %>%
+  arrange(tmp)
+
+dummy_trait2 <- dummy_trait %>%
+  arrange(LMA)
+
+dummy_trait3 <- bind_cols(tmp, dummy_trait2)
+
+dummy_trait3  %>%
+  DT::datatable(.)
+
+```
+# Check k signal
+
+```{r}
+
+tr2 <- chronos(tr, lambda=0)  
+tr3 <- multi2di(tr2, random=TRUE) 
+#tr$edge.length <- tr$edge.length + rnorm(length(tr$edge.length), 0, 0.01)
+
+physig_tb <- tibble()
+for (i in 3:10) {
+  x <- dummy_trait3[,i] %>% unlist
+  names(x) <- dummy_trait3$sp
+  physig_tb  <- bind_rows(physig_tb, phylosignal(x[tr3$tip.label], tr3))
+}
+
+physig_tb2 <- physig_tb %>%
+  mutate(trait = names(dummy_trait3)[3:10])
+
+physig_tb2
+
+```
+
+# save
+
+```{r}
+
+dummy_trait3 %>%
+  dplyr::select(-tmp) %>%
+  arrange(sp) %>%
+  write_csv(., "./data/dummy_trait.csv")
+
+tr3 %>%
+  write.tree(., "./data/dummy_tree.newick")
+
+```
+
+# env
+
+```{r}
+devtools::session_info()
+```
+
+

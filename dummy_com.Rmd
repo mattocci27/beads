@@ -1,0 +1,216 @@
+```{r}
+library(tidyverse)
+library(picante)
+library(factoextra)
+library(mvtnorm)
+library(poilog)
+```
+
+```{r}
+rm(list = ls())
+trait <- read_csv("data/dummy_trait.csv")
+tree <- read.tree("data/dummy_tree.newick")
+```
+
+```{r}
+x <- seq(1, 6)
+y <- seq(1, 10)
+z <- matrix(numeric(length(x) * length(y)), ncol = length(y))
+z[1,8:10] <- z[2,8:10] <- z[3,8:10] <- 1
+z[4,2:4] <- z[5,2:4] <- z[6,2:4] <- 1
+
+z2 <- matrix(numeric(60), ncol = length(y))
+z2[,1:5] <- 1
+
+env <- tibble(env1 = as.numeric(z),
+              env2 = as.numeric(z2)) %>%
+  mutate(row = rep(1:6, 10)) %>%
+  mutate(col = rep(1:10, each = 6)) %>%
+  mutate(site = str_c("site", 1:60)) %>%
+  mutate(topo = ifelse(env1 == 1, "Ridge", "valley")) %>%
+  mutate(type = ifelse(env2 == 1, "Rainforest", "Rubber"))
+
+
+ggplot(env, aes(y = row - 0.5, x = col - 0.5, fill = topo)) +
+    geom_raster(alpha = 0.8)  +
+    geom_vline(xintercept = 0:10) +
+    geom_hline(yintercept = 0:6) 
+
+ggplot(env, aes(y = row - 0.5, x = col - 0.5, fill = type)) +
+    geom_raster(alpha = 0.8)  +
+    geom_vline(xintercept = 0:10) +
+    geom_hline(yintercept = 0:6) 
+
+n_sp <- nrow(trait)
+#beta_LMA <- rnorm(n_sp, log(LMA), 0.2)
+beta_LMA <- 1.5
+beta_WD <- 3
+
+ts <- trait[,-1] %>% log %>% scale %>% as_tibble
+
+```
+
+Abundance_ of ith species at site j:
+
+$$
+Abundance_{ij} \sim Pois(\lambda_{ij}) \\
+\lambda_{ij} = \beta_{0j} + \beta_{1j} \times Ridge_i + \beta_{2j} \times Forest_i +
+\beta_{3j} \times Ridge_i \times Forest_i  \\
+\beta_{mj} = \gamma_{m0} + \gamma_{m1} \times logLMA_j + \gamma_{m2} \times logWD_j + \epsilon_{mj} \\
+\epsilon_{mj} \sim N(0, \sigma_m)
+$$
+
+```{r}
+beta0 <- rnorm(n_sp,
+                0.1, 0.2 
+)
+
+beta1 <- rnorm(n_sp,
+                0 +
+                0.4 * ts$LMA +
+                0.6 * ts$WD,
+              0.2
+)
+
+beta2 <- rnorm(n_sp,
+                -1.5,
+              0.2
+)
+
+beta3 <- rnorm(n_sp,
+                0 +
+                2 * ts$LMA,
+              0.2
+)
+
+beta <- cbind(beta0, beta1, beta2, beta3)
+
+env2 <- tibble(intercept  = 1, 
+               env1 = env$env1,
+               env2 = env$env2,
+               interaction = env$env2 * env$env1
+)
+
+mu <- beta %*% t(env2)
+ab <- matrix(numeric(60*77), ncol = ncol(mu))
+for (i in 1:nrow(mu)) {
+  for (j in 1:ncol(mu)) {
+    ab[i, j] <- rpois(1, exp(mu[i, j]))
+    #ab[i, j] <- rpoilog(1, exp(mu[i, j]), 1)
+  }
+}
+
+
+```
+
+# Top 5 LMA
+
+```{r}
+
+ab2 <- ab
+ab3 <- ab
+rownames(ab2) <- trait$sp
+rownames(ab3) <- trait$sp
+
+top_trait <- trait %>%
+  arrange(-LMA)
+
+top_sp <- top_trait$sp[1:5]
+low_sp <- top_trait$sp[73:77]
+ab2 <- ab2[top_sp, ]
+ab3 <- ab3[low_sp, ]
+
+for (i in 1:5) {
+ p <- env %>%
+    mutate(abund = ab2[i,]) %>%
+    ggplot(., aes(x = col - 0.5, y = row - 0.5, fill = abund)) +
+    ggtitle(str_c(top_sp[i])) +
+    geom_raster() +
+    geom_vline(xintercept = 0:10) +
+    geom_hline(yintercept = 0:6) 
+
+ print(p)
+}
+
+```
+
+# Lowest 5
+
+```{r}
+
+for (i in 1:5) {
+ p <- env %>%
+    mutate(abund = ab3[i,]) %>%
+    ggplot(., aes(x = col - 0.5, y = row - 0.5, fill = abund)) +
+    ggtitle(str_c(low_sp[i])) +
+    geom_raster() +
+    geom_vline(xintercept = 0:10) +
+    geom_hline(yintercept = 0:6) 
+
+ print(p)
+}
+
+```
+
+# Uncorrelated Env
+
+11 * 7
+
+```{r}
+
+set.seed(123)
+x <- seq(1, 13)
+y <- seq(1, 9)
+
+z <- matrix(rnorm(length(x) * length(y)), ncol = length(y))
+for (i in 2:(length(x)-1)) {
+  for (j in 2:(length(y)-1)) {
+    z[i, j] <- 
+      rnorm(1, 
+            mean(
+              c(z[i - 1, j - 1],
+              z[i - 1, j],
+              z[i - 1, j + 1],
+              z[i, j - 1],
+              z[i, j + 1],
+              z[i + 1, j - 1],
+              z[i + 1, j],
+              z[i + 1, j + 1])),
+            0)
+  }
+}
+
+z <- z[,-9]
+z <- z[,-1]
+z <- z[-13,]
+z <- z[-1,]
+
+x <- seq(1, 11)
+y <- seq(1, 7)
+#z_scaled <- (z - mean(as.numeric(z))) / sd(as.numeric(z))
+x2 <- rep(x, length(y))
+y2 <- rep(y, each = length(x))
+dat <- tibble(x = x2,
+              y = y2,
+              z = as.numeric(z)
+) 
+
+ggplot(dat, aes(x = x, y = y, fill = z)) +
+  geom_raster()
+
+dat2 <- dat %>%
+  mutate(x = x - 1) %>%
+  mutate(y = y - 1) %>%
+  mutate(z2 = rlnorm(nrow(.), z)) %>%
+#  mutate(SoilN = z - min(z)) %>%
+  mutate(SoilN = z2 / max(z2) * 0.4)
+
+ggplot(dat2, aes(x = x, y = y, fill = SoilN)) +
+  geom_raster()
+
+dat2 %>%
+  dplyr::select(x, y, SoilN) %>%
+  write_csv("data/soil.csv")
+
+```
+
