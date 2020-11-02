@@ -1,3 +1,22 @@
+---
+title: Beads community data
+author: Masatoshi Katabuchi
+date: "2020/11/3 (updated: `r Sys.Date()`)"
+output:
+#rmdformats::material
+  html_document:
+    fig_caption: yes
+    theme: spacelab #readable #sandstone #spacelab #flatly
+    highlight: pygments #tango #kate
+    toc: TRUE
+    toc_depth: 2
+    number_sections: TRUE
+    toc_float:
+      collapsed: TRUE
+      smooth_scroll: TRUE
+      toc: true
+---
+
 ```{r}
 library(tidyverse)
 library(picante)
@@ -12,11 +31,13 @@ trait <- read_csv("data/dummy_trait.csv")
 tree <- read.tree("data/dummy_tree.newick")
 ```
 
+# Dummy habitats 
+
 ```{r}
 x <- seq(1, 6)
 y <- seq(1, 10)
 z <- matrix(numeric(length(x) * length(y)), ncol = length(y))
-z[1,8:10] <- z[2,8:10] <- z[3,8:10] <- 1
+z[1,8:9] <- z[2,8:9] <- z[3,8:9] <- 1
 z[4,2:4] <- z[5,2:4] <- z[6,2:4] <- 1
 
 z2 <- matrix(numeric(60), ncol = length(y))
@@ -79,7 +100,7 @@ beta2 <- rnorm(n_sp,
 
 beta3 <- rnorm(n_sp,
                 0 +
-                2 * ts$LMA,
+                1.5 * ts$LMA,
               0.2
 )
 
@@ -103,7 +124,9 @@ for (i in 1:nrow(mu)) {
 
 ```
 
-# Top 5 LMA
+# Species abundance
+
+## Top 5 LMA
 
 ```{r}
 
@@ -134,7 +157,7 @@ for (i in 1:5) {
 
 ```
 
-# Lowest 5
+## Lowest 5
 
 ```{r}
 
@@ -153,6 +176,10 @@ for (i in 1:5) {
 ```
 
 # Uncorrelated Env
+
+- soil N < 0.04%
+- spatial autocorrelation
+- but not important for species distribution
 
 11 * 7
 
