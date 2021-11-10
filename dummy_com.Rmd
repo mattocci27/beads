@@ -185,7 +185,7 @@ for (i in 1:5) {
 
 ```{r}
 
-set.seed(123)
+set.seed(1234)
 x <- seq(1, 13)
 y <- seq(1, 9)
 
@@ -217,10 +217,12 @@ y <- seq(1, 7)
 #z_scaled <- (z - mean(as.numeric(z))) / sd(as.numeric(z))
 x2 <- rep(x, length(y))
 y2 <- rep(y, each = length(x))
-dat <- tibble(x = x2,
+
+dat <- tibble(x = x2 |> as.numeric(),
               y = y2,
-              z = as.numeric(z)
-) 
+              z = as.numeric(z)) |>
+  mutate(z = ifelse(x > 5, z + 1, z))
+
 
 ggplot(dat, aes(x = x, y = y, fill = z)) +
   geom_raster()
@@ -228,11 +230,11 @@ ggplot(dat, aes(x = x, y = y, fill = z)) +
 dat2 <- dat %>%
   mutate(x = x - 1) %>%
   mutate(y = y - 1) %>%
-  mutate(z2 = rlnorm(nrow(.), z)) %>%
+  mutate(z2 = rlnorm(nrow(.), z, 0.3)) %>%
 #  mutate(SoilN = z - min(z)) %>%
   mutate(SoilN = z2 / max(z2) * 0.4)
 
-ggplot(dat2, aes(x = x, y = y, fill = SoilN)) +
+ggplot(dat2, aes(x = x, y = y, fill = SoilN |> log())) +
   geom_raster()
 
 dat2 %>%
