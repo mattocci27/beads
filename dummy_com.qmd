@@ -182,15 +182,15 @@ tmp_fun <- function(data, env) {
   tmp
 }
 
-
 env3 <- env |>
   mutate(soil_moist = tmp_fun(dat2, soil_moist))
 
 ggplot(env3, aes(x = col, y = row, fill = soil_moist)) +
   geom_raster()
 
-dat2 %>%
-   dplyr::select(x, y, soil_n, soil_p, soil_moist) %>%
+dat2 |>
+   dplyr::select(x, y, soil_n, soil_p, soil_moist) |>
+   round(3) |>
    write_csv("data/soil.csv")
 ```
 
