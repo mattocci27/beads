@@ -227,27 +227,28 @@ beta1 <- rnorm(n_sp,
               0.2)
 
 beta2 <- rnorm(n_sp,
-                -1.5,
+                -1,
               0.2)
 
 beta3 <- rnorm(n_sp,
                 0 +
-                1.5 * ts$LMA,
+                1 * ts$LMA,
               0.2)
 
 beta4 <- rnorm(n_sp,
                 0 +
-                1.5 * ts$LMA,
+                -0.5 * ts$LMA,
               0.2)
 
 
 
-beta <- cbind(beta0, beta1, beta2, beta3)
+beta <- cbind(beta0, beta1, beta2, beta3, beta4)
 
 env2 <- tibble(intercept  = 1,
                env1 = env$env1,
                env2 = env$env2,
-               interaction = env$env2 * env$env1
+               interaction = env$env2 * env$env1,
+               moist = env3$soil_moist
 )
 
 mu <- beta %*% t(env2)
@@ -264,7 +265,7 @@ for (i in 1:nrow(mu)) {
 
 # Species abundance
 
-## Top 5 LMA
+## Top 8 LMA
 
 ```{r}
 
@@ -276,12 +277,12 @@ rownames(ab3) <- trait$sp
 top_trait <- trait %>%
   arrange(-LMA)
 
-top_sp <- top_trait$sp[1:5]
+top_sp <- top_trait$sp[1:8]
 low_sp <- top_trait$sp[73:77]
 ab2 <- ab2[top_sp, ]
 ab3 <- ab3[low_sp, ]
 
-for (i in 1:5) {
+for (i in 1:8) {
  p <- env %>%
     mutate(abund = ab2[i,]) %>%
     ggplot(., aes(x = col - 0.5, y = row - 0.5, fill = abund)) +
