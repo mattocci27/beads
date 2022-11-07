@@ -189,9 +189,9 @@ env3 <- env |>
 ggplot(env3, aes(x = col, y = row, fill = soil_moist)) +
   geom_raster()
 
-# dat2 %>%
-#   dplyr::select(x, y, SoilN) %>%
-#   write_csv("data/soil.csv")
+dat2 %>%
+   dplyr::select(x, y, soil_n, soil_p, soil_moist) %>%
+   write_csv("data/soil.csv")
 ```
 
 
