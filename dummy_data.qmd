@@ -1,24 +1,40 @@
-```{r}
+---
+title: Beads communitytraitdata
+author: "Masatoshi Katabuchi"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+fontsize: 12pt
+format:
+  html:
+    theme: cosmo #readable #sandstone #spacelab #flatly
+    # highlight: pygments #tango #kate
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    embed-resources: false
+---
+
+```{r, include=FALSE}
 library(tidyverse)
 library(picante)
 library(factoextra)
 library(mvtnorm)
 ```
+
 # Trait
 
 ```{r}
-rm(list = ls())
 t <- read_csv("data/trait.csv")
 
 sp <- t$Species
 
 t2 <- t %>%
-  pivot_longer(2:7, names_to = "trait") 
+  pivot_longer(2:7, names_to = "trait")
 
 ggplot(t2, aes(x = value)) +
   geom_histogram() +
   facet_wrap(~ trait, scale = "free")
-  
+
 ggplot(t2, aes(x = value)) +
   geom_histogram() +
   scale_x_log10() +
@@ -26,20 +42,20 @@ ggplot(t2, aes(x = value)) +
 
 
 pca_res <- prcomp(t[,-1] %>% log, scale = TRUE)
-fviz_pca_biplot(pca_res, 
+fviz_pca_biplot(pca_res,
                 axis = c(1, 2),
-                axes.linetype = "dotted", 
-                col.var = "black", 
+                axes.linetype = "dotted",
+                col.var = "black",
                 alpha.var = 0.9,
-                pointsize = 2.5, 
-                alpha.ind = 0.9, 
+                pointsize = 2.5,
+                alpha.ind = 0.9,
                 geom.ind = "point",
                 palette = c("#7570b3", "#1b9e77"),
                 addEllipses = TRUE,
-                ellipse.level = 0.95, 
-                title = "", 
-                arrowsize = 0.5, 
-                #labelsize = 2, 
+                ellipse.level = 0.95,
+                title = "",
+                arrowsize = 0.5,
+                #labelsize = 2,
                 label = "all",
                 mean.point = FALSE,
                 repel = TRUE)
@@ -62,7 +78,7 @@ data <- tibble(sp = d[ , "Species"] %>% unlist,
 
 
 
-tm <- data[,-1] %>% 
+tm <- data[,-1] %>%
   drop_na %>%
   as.matrix
 
@@ -77,37 +93,37 @@ for (i in 1:length(sds)) S3[i, ] <- S3[i, ] * sds[i]
 for (i in 1:length(sds)) S3[, i] <- S3[, i] * sds[i]
 
 trait <- 10^rmvnorm(length(sp), means, S3) %>%
-  as_tibble 
+  as_tibble
 
 trait %>%
   pivot_longer(1:6, names_to = "trait") %>%
   ggplot(., aes(x = value)) +
   geom_histogram() +
-  facet_wrap(~ trait, scale = "free") 
-  
+  facet_wrap(~ trait, scale = "free")
+
 trait %>%
   pivot_longer(1:6, names_to = "trait") %>%
   ggplot(., aes(x = value)) +
   geom_histogram() +
   scale_x_log10() +
-  facet_wrap(~ trait, scale = "free") 
+  facet_wrap(~ trait, scale = "free")
 
 pca_res <- prcomp(trait %>% log, scale = TRUE)
 
-fviz_pca_biplot(pca_res, 
+fviz_pca_biplot(pca_res,
                 axis = c(1, 2),
-                axes.linetype = "dotted", 
-                col.var = "black", 
+                axes.linetype = "dotted",
+                col.var = "black",
                 alpha.var = 0.9,
-                pointsize = 2.5, 
-                alpha.ind = 0.9, 
+                pointsize = 2.5,
+                alpha.ind = 0.9,
                 geom.ind = "point",
                 palette = c("#7570b3", "#1b9e77"),
                 addEllipses = TRUE,
-                ellipse.level = 0.95, 
-                title = "", 
-                arrowsize = 0.5, 
-                #labelsize = 2, 
+                ellipse.level = 0.95,
+                title = "",
+                arrowsize = 0.5,
+                #labelsize = 2,
                 label = "all",
                 mean.point = FALSE,
                 repel = TRUE)
@@ -117,11 +133,11 @@ fviz_pca_biplot(pca_res,
 
 ```{r}
 
-LMA <- 10^data$logLMA %>% 
+LMA <- 10^data$logLMA %>%
   na.omit %>%
   as.numeric
 
-LL <- rlnorm(length(LMA), 
+LL <- rlnorm(length(LMA),
              -1.3 + 1.1 * log(LMA),
              sd(data$logLL, na.rm = TRUE)
 )
@@ -146,11 +162,11 @@ Pmass <- rlnorm(length(LMA),
                log(0.1305  / LMA) - 0.6^2 /2,
                0.6)
 
-WD <- rlnorm(length(LMA), 
+WD <- rlnorm(length(LMA),
              log(0.5) - 0.2^2 / 2., 0.2
 )
 
-SM <- rlnorm(length(LMA), 
+SM <- rlnorm(length(LMA),
              log(2.3) - 1^2 / 2., 1
 )
 
@@ -162,7 +178,7 @@ data2 <- tibble(
  Rmass,
  Nmass = Nmass * 100,
  Pmass = Pmass * 100,
- WD, 
+ WD,
  SM
 )
 
@@ -172,20 +188,20 @@ dummy_trait <- data2 %>%
 
 pca_res <- prcomp(data2 %>% log, scale = TRUE)
 
-fviz_pca_biplot(pca_res, 
+fviz_pca_biplot(pca_res,
                 axis = c(1, 2),
-                axes.linetype = "dotted", 
-                col.var = "black", 
+                axes.linetype = "dotted",
+                col.var = "black",
                 alpha.var = 0.9,
-                pointsize = 2.5, 
-                alpha.ind = 0.1, 
+                pointsize = 2.5,
+                alpha.ind = 0.1,
                 geom.ind = "point",
                 palette = c("#7570b3", "#1b9e77"),
                 addEllipses = TRUE,
-                ellipse.level = 0.95, 
-                title = "", 
-                arrowsize = 0.5, 
-                #labelsize = 2, 
+                ellipse.level = 0.95,
+                title = "",
+                arrowsize = 0.5,
+                #labelsize = 2,
                 label = "all",
                 mean.point = FALSE,
                 repel = TRUE)
@@ -216,8 +232,8 @@ dummy_trait3  %>%
 
 ```{r}
 
-tr2 <- chronos(tr, lambda=0)  
-tr3 <- multi2di(tr2, random=TRUE) 
+tr2 <- chronos(tr, lambda=0)
+tr3 <- multi2di(tr2, random=TRUE)
 #tr$edge.length <- tr$edge.length + rnorm(length(tr$edge.length), 0, 0.01)
 
 physig_tb <- tibble()
@@ -235,17 +251,15 @@ physig_tb2
 ```
 
 # save
-
 ```{r}
 
 dummy_trait3 %>%
   dplyr::select(-tmp) %>%
   arrange(sp) %>%
-  write_csv(., "./data/dummy_trait.csv")
+  write_csv(., "data/dummy_trait.csv")
 
 tr3 %>%
-  write.tree(., "./data/dummy_tree.newick")
-
+  write.tree(., "data/dummy_tree.newick")
 ```
 
 # env
