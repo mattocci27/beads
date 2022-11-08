@@ -265,7 +265,7 @@ for (i in 1:nrow(mu)) {
 
 # Species abundance
 
-## Top 8 LMA
+## Top 10 LMA
 
 ```{r}
 
@@ -277,12 +277,12 @@ rownames(ab3) <- trait$sp
 top_trait <- trait %>%
   arrange(-LMA)
 
-top_sp <- top_trait$sp[1:8]
-low_sp <- top_trait$sp[73:77]
+top_sp <- top_trait$sp[1:10]
+low_sp <- top_trait$sp[68:77]
 ab2 <- ab2[top_sp, ]
 ab3 <- ab3[low_sp, ]
 
-for (i in 1:8) {
+for (i in 1:10) {
  p <- env %>%
     mutate(abund = ab2[i,]) %>%
     ggplot(., aes(x = col - 0.5, y = row - 0.5, fill = abund)) +
@@ -296,11 +296,11 @@ for (i in 1:8) {
 
 ```
 
-## Lowest 5
+## Lowest 10
 
 ```{r}
 
-for (i in 1:5) {
+for (i in 1:10) {
  p <- env %>%
     mutate(abund = ab3[i,]) %>%
     ggplot(., aes(x = col - 0.5, y = row - 0.5, fill = abund)) +

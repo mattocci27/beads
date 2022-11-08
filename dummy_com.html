@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Masatoshi Katabuchi">
-<meta name="dcterms.date" content="2022-11-07">
+<meta name="dcterms.date" content="2022-11-08">
 
 <title>Beads community data</title>
 <style>
@@ -120,8 +120,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   </ul></li>
   <li><a href="#species-abundance" id="toc-species-abundance" class="nav-link" data-scroll-target="#species-abundance"><span class="toc-section-number">2</span>  Species abundance</a>
   <ul class="collapse">
-  <li><a href="#top-8-lma" id="toc-top-8-lma" class="nav-link" data-scroll-target="#top-8-lma"><span class="toc-section-number">2.1</span>  Top 8 LMA</a></li>
-  <li><a href="#lowest-5" id="toc-lowest-5" class="nav-link" data-scroll-target="#lowest-5"><span class="toc-section-number">2.2</span>  Lowest 5</a></li>
+  <li><a href="#top-10-lma" id="toc-top-10-lma" class="nav-link" data-scroll-target="#top-10-lma"><span class="toc-section-number">2.1</span>  Top 10 LMA</a></li>
+  <li><a href="#lowest-10" id="toc-lowest-10" class="nav-link" data-scroll-target="#lowest-10"><span class="toc-section-number">2.2</span>  Lowest 10</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -147,7 +147,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">November 7, 2022</p>
+      <p class="date">November 8, 2022</p>
     </div>
   </div>
     
@@ -412,8 +412,8 @@ Abundance_{ij} \sim Pois(\lambda_{ij})
 </section>
 <section id="species-abundance" class="level1" data-number="2">
 <h1 data-number="2"><span class="header-section-number">2</span> Species abundance</h1>
-<section id="top-8-lma" class="level2" data-number="2.1">
-<h2 data-number="2.1" class="anchored" data-anchor-id="top-8-lma"><span class="header-section-number">2.1</span> Top 8 LMA</h2>
+<section id="top-10-lma" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="top-10-lma"><span class="header-section-number">2.1</span> Top 10 LMA</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>ab2 <span class="ot">&lt;-</span> ab</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>ab3 <span class="ot">&lt;-</span> ab</span>
@@ -423,12 +423,12 @@ Abundance_{ij} \sim Pois(\lambda_{ij})
 <span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>top_trait <span class="ot">&lt;-</span> trait <span class="sc">%&gt;%</span></span>
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="sc">-</span>LMA)</span>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>top_sp <span class="ot">&lt;-</span> top_trait<span class="sc">$</span>sp[<span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>]</span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>low_sp <span class="ot">&lt;-</span> top_trait<span class="sc">$</span>sp[<span class="dv">73</span><span class="sc">:</span><span class="dv">77</span>]</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>top_sp <span class="ot">&lt;-</span> top_trait<span class="sc">$</span>sp[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>]</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>low_sp <span class="ot">&lt;-</span> top_trait<span class="sc">$</span>sp[<span class="dv">68</span><span class="sc">:</span><span class="dv">77</span>]</span>
 <span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>ab2 <span class="ot">&lt;-</span> ab2[top_sp, ]</span>
 <span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>ab3 <span class="ot">&lt;-</span> ab3[low_sp, ]</span>
 <span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>) {</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>) {</span>
 <span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a> p <span class="ot">&lt;-</span> env <span class="sc">%&gt;%</span></span>
 <span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">abund =</span> ab2[i,]) <span class="sc">%&gt;%</span></span>
 <span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(., <span class="fu">aes</span>(<span class="at">x =</span> col <span class="sc">-</span> <span class="fl">0.5</span>, <span class="at">y =</span> row <span class="sc">-</span> <span class="fl">0.5</span>, <span class="at">fill =</span> abund)) <span class="sc">+</span></span>
@@ -463,12 +463,18 @@ Abundance_{ij} \sim Pois(\lambda_{ij})
 <div class="cell-output-display">
 <p><img src="dummy_com_files/figure-html/unnamed-chunk-6-8.png" class="img-fluid" width="672"></p>
 </div>
+<div class="cell-output-display">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-6-9.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-6-10.png" class="img-fluid" width="672"></p>
+</div>
 </div>
 </section>
-<section id="lowest-5" class="level2" data-number="2.2">
-<h2 data-number="2.2" class="anchored" data-anchor-id="lowest-5"><span class="header-section-number">2.2</span> Lowest 5</h2>
+<section id="lowest-10" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="lowest-10"><span class="header-section-number">2.2</span> Lowest 10</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>) {</span>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>) {</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a> p <span class="ot">&lt;-</span> env <span class="sc">%&gt;%</span></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">abund =</span> ab3[i,]) <span class="sc">%&gt;%</span></span>
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(., <span class="fu">aes</span>(<span class="at">x =</span> col <span class="sc">-</span> <span class="fl">0.5</span>, <span class="at">y =</span> row <span class="sc">-</span> <span class="fl">0.5</span>, <span class="at">fill =</span> abund)) <span class="sc">+</span></span>
@@ -493,6 +499,21 @@ Abundance_{ij} \sim Pois(\lambda_{ij})
 </div>
 <div class="cell-output-display">
 <p><img src="dummy_com_files/figure-html/unnamed-chunk-7-5.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-7-6.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-7-7.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-7-8.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-7-9.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-7-10.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </section>
