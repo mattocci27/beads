@@ -21,172 +21,148 @@ library(factoextra)
 library(mvtnorm)
 ```
 
-# Trait
+
+# Phylo
 
 ```{r}
-t <- read_csv("data/trait.csv")
+tr <- read.tree("data-raw/qjzad.tre")
+sp <- tr$tip.label
+tr_dist <- vcv(tr) |> cov2cor()
 
-sp <- t$Species
+phy_tr <- rmvnorm(2, rep(0, ncol(tr_dist)), tr_dist)
 
-t2 <- t %>%
-  pivot_longer(2:7, names_to = "trait")
-
-ggplot(t2, aes(x = value)) +
-  geom_histogram() +
-  facet_wrap(~ trait, scale = "free")
-
-ggplot(t2, aes(x = value)) +
-  geom_histogram() +
-  scale_x_log10() +
-  facet_wrap(~ trait, scale = "free")
-
-
-pca_res <- prcomp(t[,-1] %>% log, scale = TRUE)
-fviz_pca_biplot(pca_res,
-                axis = c(1, 2),
-                axes.linetype = "dotted",
-                col.var = "black",
-                alpha.var = 0.9,
-                pointsize = 2.5,
-                alpha.ind = 0.9,
-                geom.ind = "point",
-                palette = c("#7570b3", "#1b9e77"),
-                addEllipses = TRUE,
-                ellipse.level = 0.95,
-                title = "",
-                arrowsize = 0.5,
-                #labelsize = 2,
-                label = "all",
-                mean.point = FALSE,
-                repel = TRUE)
+tmp <- tibble(tmp = phy_tr[1, ], sp = colnames(tr_dist)) |>
+  arrange(tmp)
 ```
 
-
-## Simple Covariance
+## Mass artifact and phylogenetic signal
 
 ```{r}
 set.seed(123)
-d <- read_csv("data/nature02403-s2.csv", skip = 10)
+d <- read_csv("data/nature02403-s2.csv", skip = 10) |>
+  janitor::clean_names()
 
-data <- tibble(sp = d[ , "Species"] %>% unlist,
-         logLL = d$`log LL`,
-         logLMA = d$`log LMA`,
-         logAmass = d$`log Amass`,
-         logNmass = d$`log Nmass`,
-         logPmass = d$`log Pmass`,
-         logRmass = d$`log Rdmass`)
+data <- d |>
+  dplyr::select(sp = species, log_ll, log_lma, log_amass, log_nmass, log_pmass, log_rdmass) |>
+  filter(!is.na(log_lma)) |>
+  mutate(across(starts_with("log_"), ~ . * log(10)))
 
+log_lma <- data |>
+  pull(log_lma)
 
+lma <- exp(log_lma)
 
-tm <- data[,-1] %>%
-  drop_na %>%
-  as.matrix
-
-means <- apply(tm, 2, function(x){mean(x, na.rm = TRUE)})
-sds <- apply(tm, 2, function(x){sd(x, na.rm = TRUE)})
-
-tm2 <- scale(tm)
-S <- t(tm2) %*% tm2 / ncol(tm - 1)
-S2 <- cov2cor(S)
-S3 <- S2
-for (i in 1:length(sds)) S3[i, ] <- S3[i, ] * sds[i]
-for (i in 1:length(sds)) S3[, i] <- S3[, i] * sds[i]
-
-trait <- 10^rmvnorm(length(sp), means, S3) %>%
-  as_tibble
-
-trait %>%
-  pivot_longer(1:6, names_to = "trait") %>%
-  ggplot(., aes(x = value)) +
-  geom_histogram() +
-  facet_wrap(~ trait, scale = "free")
-
-trait %>%
-  pivot_longer(1:6, names_to = "trait") %>%
-  ggplot(., aes(x = value)) +
-  geom_histogram() +
-  scale_x_log10() +
-  facet_wrap(~ trait, scale = "free")
-
-pca_res <- prcomp(trait %>% log, scale = TRUE)
-
-fviz_pca_biplot(pca_res,
-                axis = c(1, 2),
-                axes.linetype = "dotted",
-                col.var = "black",
-                alpha.var = 0.9,
-                pointsize = 2.5,
-                alpha.ind = 0.9,
-                geom.ind = "point",
-                palette = c("#7570b3", "#1b9e77"),
-                addEllipses = TRUE,
-                ellipse.level = 0.95,
-                title = "",
-                arrowsize = 0.5,
-                #labelsize = 2,
-                label = "all",
-                mean.point = FALSE,
-                repel = TRUE)
+data |>
+  pull(log_amass) |>
+  exp() |>
+  summary()
 ```
 
-## Mass artifact
+
+Dummy LL is based on the regression of LL on LMA.
 
 ```{r}
+fit <- lm(log_ll ~ log_lma, data = data)
+sd_log_ll <- sd(data$log_ll, na.rm = TRUE)
 
-LMA <- 10^data$logLMA %>%
-  na.omit %>%
-  as.numeric
+# coef(fit)[1]
+ll <- rlnorm(length(lma),
+             coef(fit)[1] + coef(fit)[2] * log_lma - sd_log_ll^2 / 2,
+             sd_log_ll)
+```
 
-LL <- rlnorm(length(LMA),
-             -1.3 + 1.1 * log(LMA),
-             sd(data$logLL, na.rm = TRUE)
-)
 
-data %>%
-  mutate(logLMA_inv = -logLMA) %>%
-  lm(logAmass ~ logLMA_inv, .)
+Dummy A_mass is based on Model-A in Osnas et al. 2013.
 
-Amass <- rlnorm(length(LMA),
-               log(11642  / LMA) - 0.55^2 /2,
+$$
+X_{MiK} = \bar{X_{Ai}} LMA_k^{-1} \epsilon_{Aik}
+$$
+
+For Amass,
+$\bar{X_{Ai}}$ = 11642 and $\epsilon_{Aik}$ = 0.55
+
+
+```{r}
+a_mass <- rlnorm(length(lma),
+               log(11642  / lma) - 0.55^2 /2,
                0.55)
+```
 
-Rmass <- rlnorm(length(LMA),
-               log(1402  / LMA) - 0.5^2 /2,
+I don't add area-based traits in the data, but they can be calculated as follows:
+
+$$
+X_{AiK} = X_{Mik} LMA_k.
+$$
+
+
+Other LES traits are also based on Model-A.
+
+```{r}
+r_mass <- rlnorm(length(lma),
+               log(1402  / lma) - 0.5^2 /2,
                0.5)
 
-Nmass <- rlnorm(length(LMA),
-               log(1.94  / LMA) - 0.46^2 /2,
+n_mass <- rlnorm(length(lma),
+               log(1.94  / lma) - 0.46^2 /2,
                0.46)
 
-Pmass <- rlnorm(length(LMA),
-               log(0.1305  / LMA) - 0.6^2 /2,
+p_mass <- rlnorm(length(lma),
+               log(0.1305  / lma) - 0.6^2 /2,
                0.6)
+```
 
-WD <- rlnorm(length(LMA),
-             log(0.5) - 0.2^2 / 2., 0.2
-)
+Wood density and seed mass are independent with the LES.
 
-SM <- rlnorm(length(LMA),
-             log(2.3) - 1^2 / 2., 1
-)
+```{r}
+wd <- rlnorm(length(lma),
+             log(0.6) - 0.2^2 / 2., 0.2)
 
+sm <- rlnorm(length(lma),
+             log(2.3) - 1^2 / 2., 1)
+```
 
+Add the phylogenetic signal created above to the data.
+
+```{r}
 data2 <- tibble(
- LMA,
- LL,
- Amass,
- Rmass,
- Nmass = Nmass * 100,
- Pmass = Pmass * 100,
- WD,
- SM
-)
+  lma,
+  ll,
+  a_mass,
+  r_mass,
+  n_mass = n_mass * 100,
+  p_mass = p_mass * 100,
+  wd,
+  sm) |>
+  round(2) |>
+  sample_n(length(sp)) |>
+  arrange(lma)
 
-dummy_trait <- data2 %>%
-  round(2) %>%
-  sample_n(length(sp))
+dummy_trait <- bind_cols(tmp, data2)
 
-pca_res <- prcomp(data2 %>% log, scale = TRUE)
+summary(dummy_trait)
+```
+
+Units are:
+
+- LMA (g m^-2^)
+- LL (months)
+- *A*~mass~ (nmol g^-1^ s^-1^)
+- *R*~mass~ (nmol g^-1^ s^-1^)
+- *N*~mass~ (%)
+- *P*~mass~ (%)
+- Wood density (g cm^-3^)
+- Seed mass (mg)
+
+```{r}
+dummy_trait |>
+  DT::datatable()
+```
+
+
+# Check PCA
+
+```{r}
+pca_res <- prcomp(log(data2), scale = TRUE)
 
 fviz_pca_biplot(pca_res,
                 axis = c(1, 2),
@@ -205,29 +181,15 @@ fviz_pca_biplot(pca_res,
                 label = "all",
                 mean.point = FALSE,
                 repel = TRUE)
-
 ```
-
-# Phylo
 
 ```{r}
-tr <- read.tree("data/qjzad.tre")
-tr_dist <- vcv(tr) %>% cov2cor
-
-phy_tr <- rmvnorm(2, rep(0, ncol(tr_dist)), tr_dist)
-
-tmp <- tibble(tmp = phy_tr[1, ], sp = colnames(tr_dist)) %>%
-  arrange(tmp)
-
-dummy_trait2 <- dummy_trait %>%
-  arrange(LMA)
-
-dummy_trait3 <- bind_cols(tmp, dummy_trait2)
-
-dummy_trait3  %>%
-  DT::datatable(.)
-
+tr2 <- chronos(tr, lambda=0)
+plot(tr)
+plot(tr2)
 ```
+
+
 # Check k signal
 
 ```{r}
@@ -238,34 +200,71 @@ tr3 <- multi2di(tr2, random=TRUE)
 
 physig_tb <- tibble()
 for (i in 3:10) {
-  x <- dummy_trait3[,i] %>% unlist
-  names(x) <- dummy_trait3$sp
+  x <- dummy_trait[,i] %>% unlist
+  names(x) <- dummy_trait$sp
   physig_tb  <- bind_rows(physig_tb, phylosignal(x[tr3$tip.label], tr3))
 }
 
 physig_tb2 <- physig_tb %>%
-  mutate(trait = names(dummy_trait3)[3:10])
+  mutate(trait = names(dummy_trait)[3:10])
 
 physig_tb2
 
 ```
 
-# save
+
+# Save
+
 ```{r}
+dummy_trait %>%
+  dplyr::select(-tmp) |>
+  arrange(sp) |>
+  write_csv("data/dummy_trait.csv")
 
-dummy_trait3 %>%
-  dplyr::select(-tmp) %>%
-  arrange(sp) %>%
-  write_csv(., "data/dummy_trait.csv")
-
-tr3 %>%
-  write.tree(., "data/dummy_tree.newick")
+tr3 |>
+  write.tree("data/dummy_tree.newick")
 ```
 
-# env
+# Environment
 
 ```{r}
 devtools::session_info()
 ```
+
+
+```{r}
+knitr::knit_exit()
+```
+
+
+
+```{r}
+summary(a_mass)
+
+data |>
+  pull(log_amass) |>
+  exp() |>
+  summary()
+
+tmp <- data |>
+  pull(log_amass)
+
+summary(10^tmp)
+
+data |>
+  mutate(log_lma_inv = -log_lma) %>%
+  lm(log(a_mass) ~ log_lma_inv, data = .)
+```
+
+```{r}
+dummy_trait2 <- dummy_trait |>
+  arrange(lma)
+
+dummy_trait3 <- bind_cols(tmp, dummy_trait2)
+
+dummy_trait3 |>
+  DT::datatable()
+```
+
 
 
