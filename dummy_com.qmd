@@ -198,13 +198,13 @@ dat2 |>
 
 ## Abundance
 
-Abundance_ of ith species at site j:
+Abundance of *i*th species at site *j*:
 
 $$
 Abundance_{ij} \sim Pois(\lambda_{ij})
 $$
 $$
-\lambda_{ij} = \beta_{0j} + \beta_{1j} \times Ridge_i + \beta_{2j} \times Forest_i +
+\log\lambda_{ij} = \beta_{0j} + \beta_{1j} \times Ridge_i + \beta_{2j} \times Forest_i +
 \beta_{3j} \times Ridge_i \times Forest_i
 $$
 $$
@@ -217,30 +217,21 @@ $$
 
 
 ```{r}
-beta0 <- rnorm(n_sp,
-                0.1, 0.2)
+beta0 <- rnorm(n_sp, 5, 0.2)
 
 beta1 <- rnorm(n_sp,
-                0 +
-                0.4 * ts$LMA +
-                0.6 * ts$WD,
-              0.2)
+               mean = -5 + 1.5 * ts$lma + 0.6 * ts$wd,
+               sd = 0.2)
 
-beta2 <- rnorm(n_sp,
-                -1,
-              0.2)
+beta2 <- rnorm(n_sp, -1 + 0.8 * ts$sm, 0.2)
 
 beta3 <- rnorm(n_sp,
-                0 +
-                1 * ts$LMA,
-              0.2)
+               mean = 1 * ts$lma,
+               sd = 0.2)
 
 beta4 <- rnorm(n_sp,
-                0 +
-                -0.5 * ts$LMA,
-              0.2)
-
-
+               mean = -0.5 * ts$lma,
+               sd = 0.2)
 
 beta <- cbind(beta0, beta1, beta2, beta3, beta4)
 
@@ -248,8 +239,11 @@ env2 <- tibble(intercept  = 1,
                env1 = env$env1,
                env2 = env$env2,
                interaction = env$env2 * env$env1,
-               moist = env3$soil_moist
-)
+               moist = env3$soil_moist)
+
+env2
+
+summary(ts)
 
 mu <- beta %*% t(env2)
 ab <- matrix(numeric(60*77), ncol = ncol(mu))
@@ -265,51 +259,59 @@ for (i in 1:nrow(mu)) {
 
 # Species abundance
 
-## Top 10 LMA
-
 ```{r}
-
-ab2 <- ab
-ab3 <- ab
-rownames(ab2) <- trait$sp
-rownames(ab3) <- trait$sp
-
-top_trait <- trait %>%
-  arrange(-LMA)
-
-top_sp <- top_trait$sp[1:10]
-low_sp <- top_trait$sp[68:77]
-ab2 <- ab2[top_sp, ]
-ab3 <- ab3[low_sp, ]
-
-for (i in 1:10) {
- p <- env %>%
-    mutate(abund = ab2[i,]) %>%
-    ggplot(., aes(x = col - 0.5, y = row - 0.5, fill = abund)) +
-    ggtitle(str_c(top_sp[i])) +
-    geom_raster() +
-    geom_vline(xintercept = 0:10) +
-    geom_hline(yintercept = 0:6)
-
- print(p)
+# Function to plot abundance for top/bottom species based on a specific trait
+plot_abundance <- function(env, ab, species_list, title_list) {
+  for (i in seq_along(species_list)) {
+    p <- env %>%
+      mutate(abund = ab[species_list[i], ]) %>%
+      ggplot(aes(x = col - 0.5, y = row - 0.5, fill = abund)) +
+      ggtitle(title_list[i]) +
+      geom_raster() +
+      geom_vline(xintercept = 0:10) +
+      geom_hline(yintercept = 0:6)
+    print(p)
+  }
 }
 
+# Set rownames for abundance matrix `ab`
+rownames(ab) <- trait$sp
 ```
 
-## Lowest 10
+## Plot Top 10 LMA
 
 ```{r}
+top_sp_lma <- trait %>%
+  arrange(-lma) %>%
+  slice(1:10) %>%
+  pull(sp)
+plot_abundance(env, ab, top_sp_lma, top_sp_lma)
+```
 
-for (i in 1:10) {
- p <- env %>%
-    mutate(abund = ab3[i,]) %>%
-    ggplot(., aes(x = col - 0.5, y = row - 0.5, fill = abund)) +
-    ggtitle(str_c(low_sp[i])) +
-    geom_raster() +
-    geom_vline(xintercept = 0:10) +
-    geom_hline(yintercept = 0:6)
+## Plot Lowest 10 LMA
+```{r}
+low_sp_lma <- trait %>%
+  arrange(lma) %>%
+  slice(1:10) %>%
+  pull(sp)
+plot_abundance(env, ab, low_sp_lma, low_sp_lma)
+```
 
- print(p)
-}
+## Plot Top 10 Seed Mass
+```{r}
+top_sp_sm <- trait %>%
+  arrange(-sm) %>%
+  slice(1:10) %>%
+  pull(sp)
+plot_abundance(env, ab, top_sp_sm, top_sp_sm)
+```
 
+## Plot Lowest 10 Seed Mass
+```{r}
+low_sp_sm <- trait %>%
+  arrange(sm) %>%
+  slice(1:10) %>%
+  pull(sp)
+
+plot_abundance(env, ab, low_sp_sm, low_sp_sm)
 ```
