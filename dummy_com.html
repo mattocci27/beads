@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Masatoshi Katabuchi">
-<meta name="dcterms.date" content="2024-11-06">
+<meta name="dcterms.date" content="2024-11-08">
 
 <title>Beads community data</title>
 <style>
@@ -119,10 +119,15 @@ window.Quarto = {
   </ul></li>
   <li><a href="#species-abundance" id="toc-species-abundance" class="nav-link" data-scroll-target="#species-abundance"><span class="header-section-number">2</span> Species abundance</a>
   <ul class="collapse">
-  <li><a href="#plot-top-10-lma" id="toc-plot-top-10-lma" class="nav-link" data-scroll-target="#plot-top-10-lma"><span class="header-section-number">2.1</span> Plot Top 10 LMA</a></li>
-  <li><a href="#plot-lowest-10-lma" id="toc-plot-lowest-10-lma" class="nav-link" data-scroll-target="#plot-lowest-10-lma"><span class="header-section-number">2.2</span> Plot Lowest 10 LMA</a></li>
-  <li><a href="#plot-top-10-seed-mass" id="toc-plot-top-10-seed-mass" class="nav-link" data-scroll-target="#plot-top-10-seed-mass"><span class="header-section-number">2.3</span> Plot Top 10 Seed Mass</a></li>
-  <li><a href="#plot-lowest-10-seed-mass" id="toc-plot-lowest-10-seed-mass" class="nav-link" data-scroll-target="#plot-lowest-10-seed-mass"><span class="header-section-number">2.4</span> Plot Lowest 10 Seed Mass</a></li>
+  <li><a href="#plot-top-5-lma" id="toc-plot-top-5-lma" class="nav-link" data-scroll-target="#plot-top-5-lma"><span class="header-section-number">2.1</span> Plot Top 5 LMA</a></li>
+  <li><a href="#plot-lowest-5-lma" id="toc-plot-lowest-5-lma" class="nav-link" data-scroll-target="#plot-lowest-5-lma"><span class="header-section-number">2.2</span> Plot Lowest 5 LMA</a></li>
+  <li><a href="#plot-top-5-seed-mass" id="toc-plot-top-5-seed-mass" class="nav-link" data-scroll-target="#plot-top-5-seed-mass"><span class="header-section-number">2.3</span> Plot Top 5 Seed Mass</a></li>
+  <li><a href="#plot-lowest-5-seed-mass" id="toc-plot-lowest-5-seed-mass" class="nav-link" data-scroll-target="#plot-lowest-5-seed-mass"><span class="header-section-number">2.4</span> Plot Lowest 5 Seed Mass</a></li>
+  </ul></li>
+  <li><a href="#species-list" id="toc-species-list" class="nav-link" data-scroll-target="#species-list"><span class="header-section-number">3</span> Species list</a>
+  <ul class="collapse">
+  <li><a href="#abundant" id="toc-abundant" class="nav-link" data-scroll-target="#abundant"><span class="header-section-number">3.1</span> Abundant</a></li>
+  <li><a href="#rare" id="toc-rare" class="nav-link" data-scroll-target="#rare"><span class="header-section-number">3.2</span> Rare</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -148,7 +153,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">November 6, 2024</p>
+      <p class="date">November 8, 2024</p>
     </div>
   </div>
   
@@ -482,12 +487,12 @@ Abundance_{ij} \sim Pois(\lambda_{ij})
 <span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Set rownames for abundance matrix `ab`</span></span>
 <span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(ab) <span class="ot">&lt;-</span> trait<span class="sc">$</span>sp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<section id="plot-top-10-lma" class="level2" data-number="2.1">
-<h2 data-number="2.1" class="anchored" data-anchor-id="plot-top-10-lma"><span class="header-section-number">2.1</span> Plot Top 10 LMA</h2>
+<section id="plot-top-5-lma" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="plot-top-5-lma"><span class="header-section-number">2.1</span> Plot Top 5 LMA</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>top_sp_lma <span class="ot">&lt;-</span> trait <span class="sc">%&gt;%</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="sc">-</span>lma) <span class="sc">%&gt;%</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(sp)</span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_abundance</span>(env, ab, top_sp_lma, top_sp_lma)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
@@ -525,49 +530,14 @@ Abundance_{ij} \sim Pois(\lambda_{ij})
 </figure>
 </div>
 </div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-7-6.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-7-7.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-7-8.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-7-9.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-7-10.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
 </div>
 </section>
-<section id="plot-lowest-10-lma" class="level2" data-number="2.2">
-<h2 data-number="2.2" class="anchored" data-anchor-id="plot-lowest-10-lma"><span class="header-section-number">2.2</span> Plot Lowest 10 LMA</h2>
+<section id="plot-lowest-5-lma" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="plot-lowest-5-lma"><span class="header-section-number">2.2</span> Plot Lowest 5 LMA</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>low_sp_lma <span class="ot">&lt;-</span> trait <span class="sc">%&gt;%</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(lma) <span class="sc">%&gt;%</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(sp)</span>
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_abundance</span>(env, ab, low_sp_lma, low_sp_lma)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
@@ -605,49 +575,14 @@ Abundance_{ij} \sim Pois(\lambda_{ij})
 </figure>
 </div>
 </div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-8-6.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-8-7.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-8-8.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-8-9.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-8-10.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
 </div>
 </section>
-<section id="plot-top-10-seed-mass" class="level2" data-number="2.3">
-<h2 data-number="2.3" class="anchored" data-anchor-id="plot-top-10-seed-mass"><span class="header-section-number">2.3</span> Plot Top 10 Seed Mass</h2>
+<section id="plot-top-5-seed-mass" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="plot-top-5-seed-mass"><span class="header-section-number">2.3</span> Plot Top 5 Seed Mass</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>top_sp_sm <span class="ot">&lt;-</span> trait <span class="sc">%&gt;%</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="sc">-</span>sm) <span class="sc">%&gt;%</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(sp)</span>
 <span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_abundance</span>(env, ab, top_sp_sm, top_sp_sm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
@@ -685,49 +620,14 @@ Abundance_{ij} \sim Pois(\lambda_{ij})
 </figure>
 </div>
 </div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-9-6.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-9-7.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-9-8.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-9-9.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-9-10.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
 </div>
 </section>
-<section id="plot-lowest-10-seed-mass" class="level2" data-number="2.4">
-<h2 data-number="2.4" class="anchored" data-anchor-id="plot-lowest-10-seed-mass"><span class="header-section-number">2.4</span> Plot Lowest 10 Seed Mass</h2>
+<section id="plot-lowest-5-seed-mass" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="plot-lowest-5-seed-mass"><span class="header-section-number">2.4</span> Plot Lowest 5 Seed Mass</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>low_sp_sm <span class="ot">&lt;-</span> trait <span class="sc">%&gt;%</span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(sm) <span class="sc">%&gt;%</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(sp)</span>
 <span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_abundance</span>(env, ab, low_sp_sm, low_sp_sm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -766,40 +666,206 @@ Abundance_{ij} \sim Pois(\lambda_{ij})
 </figure>
 </div>
 </div>
+</div>
+</section>
+</section>
+<section id="species-list" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Species list</h1>
+<section id="abundant" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="abundant"><span class="header-section-number">3.1</span> Abundant</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>abundant_sp <span class="ot">&lt;-</span> <span class="fu">c</span>(top_sp_lma, low_sp_lma, top_sp_sm, low_sp_sm) <span class="sc">|&gt;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>() <span class="sc">|&gt;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sort</span>()</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>abundant_sp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Beilschmiedia_robusta"    "Camellia_forrestii"      
+ [3] "Camellia_Pitardii"        "Castanopsis_wattii"      
+ [5] "Claoxylon_khasianum"      "Eurya_trichocarpa"       
+ [7] "Ficus_henryi"             "Ficus_heteromorpha"      
+ [9] "Itoa_orientalis"          "Lindera_caudata"         
+[11] "Lithocarpus_crassifolius" "Lithocarpus_henryi"      
+[13] "Lithocarpus_xylocarpus"   "Machilus_salicina"       
+[15] "Neolitsea_polycarpa"      "Rhododendron_decorum"    
+[17] "Rhus_sylvestris"          "Schima_noronhae"         
+[19] "Symplocos_anomala"       </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_abundance</span>(env, ab, abundant_sp, abundant_sp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-10-6.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-10-7.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-2.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-10-8.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-3.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-10-9.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-4.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="dummy_com_files/figure-html/unnamed-chunk-10-10.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-5.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-6.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-7.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-8.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-9.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-10.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-11.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-12.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-13.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-14.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-15.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-16.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-17.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-18.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="dummy_com_files/figure-html/unnamed-chunk-11-19.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="rare" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="rare"><span class="header-section-number">3.2</span> Rare</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>rare_sp <span class="ot">&lt;-</span> trait <span class="sc">%&gt;%</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>(sp <span class="sc">%in%</span> abundant_sp)) <span class="sc">%&gt;%</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(sp) <span class="sc">|&gt;</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># setdiff(trait$sp) |&gt;</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sort</span>()</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>rare_sp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Acer_campbellii"             "Actinodaphne_forrestii"     
+ [3] "Alnus_nepalensis"            "Anneslea_fragrans"          
+ [5] "Betula_alnoides"             "Camellia_assamica"          
+ [7] "Camellia_yunnanensis"        "Castanopsis_echidnocarpa"   
+ [9] "Craibiodendron_yunnanense"   "Cyclobalanopsis_stewardiana"
+[11] "Eriobotrya_bengalensis"      "Eriobotrya_tengyuehensis"   
+[13] "Eurya_paratetragonoclada"    "Eurya_quinquelocularis"     
+[15] "Exbucklandia_populnea"       "Ficus_racemosa"             
+[17] "Glochidion_a"                "Ilex_corallina"             
+[19] "Ilex_manneiensis"            "Illicium_macranthum"        
+[21] "Laurocerasus_undulata"       "Leucosceptrum_canum"        
+[23] "Lindera_thomsonii"           "Lithocarpus_confinis"       
+[25] "Lithocarpus_dealbatus"       "Lithocarpus_hancei"         
+[27] "Lithocarpus_truncatus"       "Litsea_a"                   
+[29] "Litsea_chunii"               "Litsea_elongata"            
+[31] "Machilus_gamblei"            "Machilus_yunnanensis"       
+[33] "Mahonia_duclouxiana"         "Manglietia_insignis"        
+[35] "Melia_toosendan"             "Meliosma_arnottiana"        
+[37] "Meliosma_kirkii"             "Michelia_floribunda"        
+[39] "Myrsine_semiserrata"         "Neolitsea_chuii"            
+[41] "Olea_rosea"                  "Osbeckia_mepalensis"        
+[43] "Padus_napaulensis"           "Rhododendron_irroratum"     
+[45] "Rhododendron_leptothrium"    "Saurauia_napaulensis"       
+[47] "Schefflera_fengii"           "Schefflera_shweliensis"     
+[49] "Schima_argentea"             "Skimmia_arborescens"        
+[51] "Sterculia_nobilis"           "Stewartia_pteropetiolata"   
+[53] "Stewartia_yunnanensis"       "Symplocos_grandis"          
+[55] "Symplocos_ramosissima"       "Symplocos_sumuntia"         
+[57] "Ternstroemia_gymnanthera"    "Vaccinium_duclouxii"        </code></pre>
 </div>
 </div>
 </section>

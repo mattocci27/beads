@@ -1,5 +1,5 @@
 ---
-title: Beads communitytraitdata
+title: Beads community trait data
 author: "Masatoshi Katabuchi"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 fontsize: 12pt
@@ -121,7 +121,7 @@ sm <- rlnorm(length(lma),
              log(2.3) - 1^2 / 2., 1)
 ```
 
-Add the phylogenetic signal created above to the data.
+Add the phylogenetic signal to the above data.
 
 ```{r}
 data2 <- tibble(
@@ -137,9 +137,28 @@ data2 <- tibble(
   sample_n(length(sp)) |>
   arrange(lma)
 
-dummy_trait <- bind_cols(tmp, data2)
+dummy_trait <- bind_cols(tmp, data2) |>
+  arrange(-sm)
+
+# Find the rows containing the target species
+row_henryi <- which(dummy_trait$sp == "Lithocarpus_henryi")
+row_xylocarpus <- which(dummy_trait$sp == "Lithocarpus_xylocarpus")
+row_wattii <- which(dummy_trait$sp == "Castanopsis_wattii")
+
+# Swap the top row with Lithocarpus_henryi
+dummy_trait[c(1, row_henryi), 2] <- dummy_trait[c(row_henryi, 1), 2]
+
+# Swap the second row with Lithocarpus_xylocarpus
+dummy_trait[c(2, row_xylocarpus), 2] <- dummy_trait[c(row_xylocarpus, 2), 2]
+
+# Swap the third row with Castanopsis_wattii
+dummy_trait[c(3, row_wattii), 2] <- dummy_trait[c(row_wattii, 3), 2]
+
+dummy_trait <- dummy_trait |>
+  arrange(sp)
 
 summary(dummy_trait)
+
 ```
 
 Units are:
@@ -158,6 +177,23 @@ dummy_trait |>
   DT::datatable()
 ```
 
+```{r}
+# Select the top and bottom species for 'sm' and 'lma' simultaneously
+lma_sp <- dummy_trait %>%
+  arrange(lma) %>%
+  slice(c(1:5, (n()-4):n())) %>%
+  pull(sp)
+sm_sp <- dummy_trait %>%
+  arrange(sm) %>%
+  slice(c(1:5, (n()-4):n())) %>%
+  pull(sp)
+
+# Extract unique and sorted species names in one step
+abundant_sp <- unique(c(lma_sp, sm_sp)) %>%
+  sort()
+
+abundant_sp
+```
 
 # Check PCA
 
@@ -193,7 +229,6 @@ plot(tr2)
 # Check k signal
 
 ```{r}
-
 tr2 <- chronos(tr, lambda=0)
 tr3 <- multi2di(tr2, random=TRUE)
 #tr$edge.length <- tr$edge.length + rnorm(length(tr$edge.length), 0, 0.01)
@@ -265,6 +300,3 @@ dummy_trait3 <- bind_cols(tmp, dummy_trait2)
 dummy_trait3 |>
   DT::datatable()
 ```
-
-
-

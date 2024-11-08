@@ -278,40 +278,63 @@ plot_abundance <- function(env, ab, species_list, title_list) {
 rownames(ab) <- trait$sp
 ```
 
-## Plot Top 10 LMA
+## Plot Top 5 LMA
 
 ```{r}
 top_sp_lma <- trait %>%
   arrange(-lma) %>%
-  slice(1:10) %>%
+  slice(1:5) %>%
   pull(sp)
 plot_abundance(env, ab, top_sp_lma, top_sp_lma)
 ```
 
-## Plot Lowest 10 LMA
+## Plot Lowest 5 LMA
 ```{r}
 low_sp_lma <- trait %>%
   arrange(lma) %>%
-  slice(1:10) %>%
+  slice(1:5) %>%
   pull(sp)
 plot_abundance(env, ab, low_sp_lma, low_sp_lma)
 ```
 
-## Plot Top 10 Seed Mass
+## Plot Top 5 Seed Mass
 ```{r}
 top_sp_sm <- trait %>%
   arrange(-sm) %>%
-  slice(1:10) %>%
+  slice(1:5) %>%
   pull(sp)
 plot_abundance(env, ab, top_sp_sm, top_sp_sm)
 ```
 
-## Plot Lowest 10 Seed Mass
+## Plot Lowest 5 Seed Mass
 ```{r}
 low_sp_sm <- trait %>%
   arrange(sm) %>%
-  slice(1:10) %>%
+  slice(1:5) %>%
   pull(sp)
 
 plot_abundance(env, ab, low_sp_sm, low_sp_sm)
+```
+
+# Species list
+
+## Abundant
+```{r}
+abundant_sp <- c(top_sp_lma, low_sp_lma, top_sp_sm, low_sp_sm) |>
+  unique() |>
+  sort()
+abundant_sp
+plot_abundance(env, ab, abundant_sp, abundant_sp)
+```
+
+## Rare
+
+```{r}
+rare_sp <- trait %>%
+  filter(!(sp %in% abundant_sp)) %>%
+  pull(sp) |>
+  # setdiff(trait$sp) |>
+  sort()
+
+rare_sp
 ```
