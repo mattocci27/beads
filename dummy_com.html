@@ -867,6 +867,10 @@ Abundance_{ij} \sim Pois(\lambda_{ij})
 [55] "Symplocos_ramosissima"       "Symplocos_sumuntia"         
 [57] "Ternstroemia_gymnanthera"    "Vaccinium_duclouxii"        </code></pre>
 </div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">sp =</span> abundant_sp, <span class="at">abund =</span> <span class="st">"abundant"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(<span class="fu">tibble</span>(<span class="at">sp =</span> rare_sp, <span class="at">abund =</span> <span class="st">"rare"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sp2 =</span> <span class="fu">str_replace_all</span>(sp, <span class="st">"_"</span>, <span class="st">" "</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_csv</span>(<span class="st">"data/note.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>

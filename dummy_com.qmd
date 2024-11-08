@@ -337,4 +337,9 @@ rare_sp <- trait %>%
   sort()
 
 rare_sp
+
+tibble(sp = abundant_sp, abund = "abundant") |>
+  bind_rows(tibble(sp = rare_sp, abund = "rare")) |>
+  mutate(sp2 = str_replace_all(sp, "_", " ")) |>
+  write_csv("data/note.csv")
 ```
