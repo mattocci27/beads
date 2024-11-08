@@ -11,7 +11,7 @@ format:
     toc-depth: 2
     number-sections: true
     smooth-scroll: true
-    embed-resources: false
+    embed-resources: true
 ---
 
 ```{r, include=FALSE}
@@ -318,7 +318,7 @@ plot_abundance(env, ab, low_sp_sm, low_sp_sm)
 
 # Species list
 
-## Abundant
+## Abundant species or species with clear patterns
 ```{r}
 abundant_sp <- c(top_sp_lma, low_sp_lma, top_sp_sm, low_sp_sm) |>
   unique() |>
@@ -327,7 +327,7 @@ abundant_sp
 plot_abundance(env, ab, abundant_sp, abundant_sp)
 ```
 
-## Rare
+## Other species
 
 ```{r}
 rare_sp <- trait %>%
@@ -342,4 +342,8 @@ tibble(sp = abundant_sp, abund = "abundant") |>
   bind_rows(tibble(sp = rare_sp, abund = "rare")) |>
   mutate(sp2 = str_replace_all(sp, "_", " ")) |>
   write_csv("data/note.csv")
+```
+
+```{r}
+plot_abundance(env, ab, rare_sp, rare_sp)
 ```
