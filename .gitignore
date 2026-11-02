@@ -102,3 +102,13 @@ data/*
 
 dummy_data_files/*
 dummy_com_files/*
+
+# Reproducible teaching inputs and generated handouts
+!data-raw/dummy_reference.newick
+!data/site_environment.csv
+!data/samp.csv
+!data/note.csv
+!community_analysis.html
+
+/.quarto/
+**/*.quarto_ipynb

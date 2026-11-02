@@ -1,0 +1,103 @@
+---
+title: "Beads community analysis"
+format:
+  html:
+    toc: true
+    embed-resources: true
+---
+
+These are simulated communities. Run the chunks in order from the project root.
+The aim is to distinguish species richness, evolutionary history, community
+trait means, and trait dispersion, then compare sites with different habitats.
+
+```{r}
+library(tidyverse)
+library(picante)
+d <- read_csv("data/samp.csv", show_col_types = FALSE)
+trait <- read_csv("data/dummy_trait.csv", show_col_types = FALSE)
+env <- read_csv("data/site_environment.csv", show_col_types = FALSE)
+tree <- read.tree("data/dummy_tree.newick")
+
+samp <- tapply(d$abund, list(d$Site, d$Species), sum)
+# Missing combinations must be verified as absences before replacing NA with 0.
+stopifnot(!anyNA(samp), all(samp >= 0), all(rowSums(samp) > 0),
+          !anyDuplicated(trait$sp), !anyDuplicated(env$site),
+          setequal(colnames(samp), tree$tip.label),
+          setequal(colnames(samp), trait$sp),
+          setequal(rownames(samp), env$site))
+```
+
+## Richness and phylogenetic diversity
+
+PD includes the path to the root (`include.root = TRUE`). MPD and MNTD below
+use presence/absence, without abundance weighting. Branch lengths are arbitrary
+units. High richness is intentional: some communities contain all 77 species
+and therefore have the same presence/absence metrics.
+
+```{r}
+phylo_dm <- cophenetic(tree)
+metrics <- tibble(
+  site = rownames(samp),
+  richness = vegan::specnumber(samp),
+  shannon = vegan::diversity(samp),
+  PD = pd(samp, tree, include.root = TRUE)$PD,
+  MPD = mpd(samp, phylo_dm, abundance.weighted = FALSE),
+  MNTD = mntd(samp, phylo_dm, abundance.weighted = FALSE)
+) |>
+  left_join(env, by = "site")
+metrics
+```
+
+## Community-weighted means in original units
+
+Each CWM is the sum of abundance × trait divided by total abundance. Align
+species by name before matrix multiplication. This produces a site × trait
+matrix. LMA remains in g m^-2^; wood density in g cm^-3^; seed mass in mg.
+
+```{r}
+aligned_trait <- trait[match(colnames(samp), trait$sp), ]
+stopifnot(identical(aligned_trait$sp, colnames(samp)))
+cwm <- (samp %*% as.matrix(aligned_trait[, -1])) / rowSums(samp)
+cwm_sites <- as_tibble(cwm, rownames = "site") |>
+  left_join(env, by = "site")
+cwm_sites
+
+ggplot(cwm_sites, aes(x = soil_moist, y = lma, color = topo, shape = type)) +
+  geom_point() +
+  labs(x = "Moisture index", y = "CWM LMA (g m⁻²)") +
+  theme_bw()
+```
+
+Compare CWM with richness: can the dominant strategy change while species
+richness stays the same? Moisture is associated with topography, so this plot
+alone cannot isolate their separate effects.
+
+## Functional distances and a null expectation
+
+Use log-transformed traits (except wood density), then standardize each trait.
+This gives equal variance to each trait, although correlated traits still
+represent overlapping information. These transformed values are used for
+distances; the preceding CWM calculation uses original values.
+
+```{r}
+trait_for_distance <- trait |>
+  mutate(across(c(lma, ll, a_mass, r_mass, n_mass, p_mass, sm), log))
+trait_mat <- scale(as.matrix(trait_for_distance[, -1]))
+rownames(trait_mat) <- trait$sp
+trait_dm <- as.matrix(dist(trait_mat))
+set.seed(123)
+functional_mpd <- ses.mpd(samp, trait_dm, abundance.weighted = FALSE,
+                          null.model = "taxa.labels", runs = 999)
+# Full-pool communities have no label-shuffle variation; mask undefined SES.
+full_pool <- rowSums(samp > 0) == nrow(trait_dm)
+functional_mpd[full_pool, c("mpd.obs.z", "mpd.obs.p")] <- NA_real_
+functional_mpd
+```
+
+The null model shuffles labels in the trait distance matrix, using the 77
+species as the pool while preserving each site's richness. Negative SES means
+smaller distances than the null mean; positive SES means larger distances.
+The sign alone does not establish significance or identify an ecological
+process. If every species in the pool is present, unweighted MPD is invariant
+to label shuffles: the null SD is zero apart from numerical rounding, and
+its SES is not interpretable.

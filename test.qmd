@@ -1,0 +1,23 @@
+
+```{r}
+set.seed(123)
+m <- NULL
+for (i in 1:6) {
+  m <- cbind(m, runif(20, 0, 10) |> as.integer())
+}
+
+colnames(m) <- paste0("q", 1:6)
+rownames(m) <- paste0("sp", 1:20)
+
+#===============
+
+sample_col <- function(column, n) {
+  replicate(n, sample(column, 20, replace = FALSE))
+}
+
+new_m <- do.call(cbind, lapply(1:6, function(i) sample_col(m[,i], 5)))
+
+colnames(new_m) <- paste0(rep(paste0("q", 1:6), each = 5), "_", rep(1:5, 6))
+
+new_m_sorted <- new_m[order(rownames(new_m)), ]
+```

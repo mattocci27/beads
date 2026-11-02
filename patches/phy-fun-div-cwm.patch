@@ -1,0 +1,34 @@
+--- a/diversity_example.qmd
++++ b/diversity_example.qmd
+@@ -170,8 +170,8 @@
+ | ------------ | ------------------------------------------ | ----------------- |
+ | LMA          | Leaf mass per area                         | g m^-2^           |
+ | LL           | Leaf lifespans (longevity)                 | months            |
+-| Amass        | Maximum photosynthetic rates per unit mass | nnoml g^-1^ s^-^1 |
+-| Rmass        | Dark respiration rates per unit mass       | nnoml g^-1^ s^-^1 |
++| Amass        | Maximum photosynthetic rates per unit mass | nmol g^-1^ s^-1^ |
++| Rmass        | Dark respiration rates per unit mass       | nmol g^-1^ s^-1^ |
+ | Nmass        | Leaf nitrogen per unit mass                | %                 |
+ | Pmass        | Leaf phosphorus per unit mass              | %                 |
+ | WD           | Wood density                               | g cm^-3^          |
+@@ -341,7 +341,7 @@
+ 
+ ```{r}
+-stopifnot(!anyDuplicated(trait2$sp), all(colnames(samp) %in% trait2$sp))
++stopifnot(!anyDuplicated(trait$sp), all(colnames(samp) %in% trait$sp))
+-tmp <- trait2[match(colnames(samp), trait2$sp), ]
++tmp <- trait[match(colnames(samp), trait$sp), ]
+ stopifnot(identical(tmp$sp, colnames(samp)))
+ 
+ tmp
+@@ -354,7 +354,9 @@
+ (cwm <- cws / ab)
+ ```
+ 
+-The species $\times$ site matrix and the species $\times$ trait matrix became the trait $\times$ site matrix.
++The site × species matrix and species × trait matrix produce a site × trait
++matrix. CWM uses raw trait values, so the results retain their original units.
++Log-transformed and standardized traits are used below for trait distances.
+ 
+ ## Distance based metrics
+ 

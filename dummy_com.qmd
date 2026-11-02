@@ -17,9 +17,6 @@ format:
 ```{r, include=FALSE}
 library(tidyverse)
 library(picante)
-library(factoextra)
-library(mvtnorm)
-library(poilog)
 ```
 
 ```{r}
@@ -45,7 +42,7 @@ env <- tibble(env1 = as.numeric(z),
               env2 = as.numeric(z2)) %>%
   mutate(row = rep(1:6, 10)) %>%
   mutate(col = rep(1:10, each = 6)) %>%
-  mutate(site = str_c("site", 1:60)) %>%
+  mutate(site = str_c("Site", 1:60)) %>%
   mutate(topo = ifelse(env1 == 1, "Ridge", "valley")) %>%
   mutate(type = ifelse(env2 == 1, "Rainforest", "Rubber"))
 
@@ -60,26 +57,22 @@ ggplot(env, aes(y = row - 0.5, x = col - 0.5, fill = type)) +
     geom_hline(yintercept = 0:6)
 
 n_sp <- nrow(trait)
-#beta_LMA <- rnorm(n_sp, log(LMA), 0.2)
-beta_LMA <- 1.5
-beta_WD <- 3
 
 ts <- trait[,-1] %>% log %>% scale %>% as_tibble
 ```
 
 ## Continuous environmental variables
 
-- soil N < 0.04%
-- soil P < 0.02%
-- moisture: moisture index (unitless)
-  - large value indicates high moisture
-- spatial autocorrelation
-- but not important for species distribution
-
-11 * 7
+- Soil N: percent dry mass, with a maximum of 0.4% at grid points.
+- Moisture: a unitless index; larger values indicate higher moisture.
+- Both variables are spatially autocorrelated. Moisture affects species abundance;
+  soil N is not used in the abundance model.
+- The 11 × 7 grid gives 77 corner measurements for 60 sampling quadrats.
+  Each quadrat uses the mean of its four corners.
 
 ```{r}
 generate_env <- function(seed = 123, model = c("ridge_negative", "ridge_positive", "random")) {
+  model <- match.arg(model)
   set.seed(seed)
   x <- seq(1, 13)
   y <- seq(1, 9)
@@ -133,28 +126,19 @@ generate_env <- function(seed = 123, model = c("ridge_negative", "ridge_positive
 
 moist <- generate_env(model = "ridge_negative")
 nitro <- generate_env(model = "random")
-phos <- generate_env(model = "random")
 
 nitro <- nitro |>
   mutate(soil_n = exp(z)) |>
   mutate(soil_n = soil_n / max(soil_n) * 0.4)
-
-phos <- phos |>
-  mutate(soil_p = exp(z)) |>
-  mutate(soil_p = soil_p / max(soil_p) * 0.2)
 
 moist <- moist |>
   mutate(soil_moist = z)
 
 dat2 <- nitro |>
   dplyr::select(-z) |>
-  mutate(soil_p = phos$soil_p) |>
   mutate(soil_moist = moist$soil_moist)
 
 ggplot(dat2, aes(x = x, y = y, fill = soil_n |> log())) +
-  geom_raster()
-
-ggplot(dat2, aes(x = x, y = y, fill = soil_p |> log())) +
   geom_raster()
 
 ggplot(dat2, aes(x = x, y = y, fill = soil_moist)) +
@@ -174,7 +158,7 @@ tmp_fun <- function(data, env) {
           filter(x == i  & y == (j + 1)) |>
           pull({{env}})
        s4 <- data |>
-          filter(x == i  & y == (j + 1)) |>
+          filter(x == (i + 1) & y == (j + 1)) |>
           pull({{env}})
       tmp <- c(tmp, mean(c(s1, s2, s3, s4)))
     }
@@ -183,55 +167,75 @@ tmp_fun <- function(data, env) {
 }
 
 env3 <- env |>
-  mutate(soil_moist = tmp_fun(dat2, soil_moist))
+  mutate(soil_n = tmp_fun(dat2, soil_n),
+         soil_moist = tmp_fun(dat2, soil_moist))
 
 ggplot(env3, aes(x = col, y = row, fill = soil_moist)) +
   geom_raster()
 
 dat2 |>
-   dplyr::select(x, y, soil_n, soil_p, soil_moist) |>
+   dplyr::select(x, y, soil_n, soil_moist) |>
    round(3) |>
    write_csv("data/soil.csv")
+
+env3 |>
+  dplyr::select(site, row, col, topo, type, soil_n, soil_moist) |>
+  write_csv("data/site_environment.csv")
 ```
 
 
 
 ## Abundance
 
-Abundance of *i*th species at site *j*:
+Abundance of species $i$ at site $j$:
 
 $$
-Abundance_{ij} \sim Pois(\lambda_{ij})
-$$
-$$
-\log\lambda_{ij} = \beta_{0j} + \beta_{1j} \times Ridge_i + \beta_{2j} \times Forest_i +
-\beta_{3j} \times Ridge_i \times Forest_i
-$$
-$$
-\beta_{mj} = \gamma_{m0} + \gamma_{m1} \times logLMA_j + \gamma_{m2} \times logWD_j + \epsilon_{mj}
-$$
-$$
-\epsilon_{mj} \sim N(0, \sigma_m)
+A_{ij} \sim \mathrm{Poisson}(\lambda_{ij}), \qquad
+\log \lambda_{ij} = \beta_{0i} + \beta_{1i} R_j + \beta_{2i} F_j
++ \beta_{3i} R_j F_j + \beta_{4i} M_j.
 $$
 
+Here $R_j = 1$ for ridge, $F_j = 1$ for rainforest, and $M_j$ is the
+four-corner mean moisture index. Let $L_i$, $W_i$, and $S_i$ denote
+standardized log LMA, log wood density, and log seed mass, respectively:
 
+$$
+\begin{aligned}
+\beta_{0i} &= 5 + \epsilon_{0i}, \\
+\beta_{1i} &= -2 + 1.2 L_i + 0.3 W_i + \epsilon_{1i}, \\
+\beta_{2i} &= -1 + 0.8 S_i + \epsilon_{2i}, \\
+\beta_{3i} &= 0.3 L_i + \epsilon_{3i}, \\
+\beta_{4i} &= -0.1 L_i + \epsilon_{4i}, \qquad
+\epsilon_{mi} \sim N(0, 0.2^2)\ (m=0,\ldots,3),\quad \epsilon_{4i} \sim N(0, 0.05^2).
+\end{aligned}
+$$
+
+The abundance model is tuned for scattering beads by eye: most species are
+spread across the larger valley area, while a small number retain a ridge
+preference. Weaker moisture and ridge × forest effects prevent very dry corners
+from becoming extreme abundance hotspots. The maps show relative spatial
+patterns; the simulated counts are not literal bead placement instructions.
+
+High richness in valleys is intentional. Presence/absence metrics can be identical
+between sites even when abundances and community-weighted means differ.
 
 ```{r}
+set.seed(456) # Independent of environmental generation and plotting.
 beta0 <- rnorm(n_sp, 5, 0.2)
 
 beta1 <- rnorm(n_sp,
-               mean = -5 + 1.5 * ts$lma + 0.6 * ts$wd,
+               mean = -2 + 1.2 * ts$lma + 0.3 * ts$wd,
                sd = 0.2)
 
 beta2 <- rnorm(n_sp, -1 + 0.8 * ts$sm, 0.2)
 
 beta3 <- rnorm(n_sp,
-               mean = 1 * ts$lma,
+               mean = 0.3 * ts$lma,
                sd = 0.2)
 
 beta4 <- rnorm(n_sp,
-               mean = -0.5 * ts$lma,
-               sd = 0.2)
+               mean = -0.1 * ts$lma,
+               sd = 0.05)
 
 beta <- cbind(beta0, beta1, beta2, beta3, beta4)
 
@@ -246,15 +250,19 @@ env2
 summary(ts)
 
 mu <- beta %*% t(env2)
-ab <- matrix(numeric(60*77), ncol = ncol(mu))
+ab <- matrix(0, nrow = nrow(mu), ncol = ncol(mu),
+             dimnames = list(trait$sp, env$site))
 for (i in 1:nrow(mu)) {
   for (j in 1:ncol(mu)) {
     ab[i, j] <- rpois(1, exp(mu[i, j]))
-    #ab[i, j] <- rpoilog(1, exp(mu[i, j]), 1)
   }
 }
 
-
+# Export all species-site combinations, including zero counts.
+as.data.frame(as.table(ab), responseName = "abund") |>
+  as_tibble() |>
+  transmute(Site = as.character(Var2), Species = as.character(Var1), abund) |>
+  write_csv("data/samp.csv")
 ```
 
 # Species abundance
@@ -318,32 +326,34 @@ plot_abundance(env, ab, low_sp_sm, low_sp_sm)
 
 # Species list
 
-## Abundant species or species with clear patterns
+## Focal species with extreme LMA or seed mass
+
+These are selected by trait values, not by their realized abundance.
 ```{r}
-abundant_sp <- c(top_sp_lma, low_sp_lma, top_sp_sm, low_sp_sm) |>
+focal_sp <- c(top_sp_lma, low_sp_lma, top_sp_sm, low_sp_sm) |>
   unique() |>
   sort()
-abundant_sp
-plot_abundance(env, ab, abundant_sp, abundant_sp)
+focal_sp
+plot_abundance(env, ab, focal_sp, focal_sp)
 ```
 
 ## Other species
 
 ```{r}
-rare_sp <- trait %>%
-  filter(!(sp %in% abundant_sp)) %>%
+other_sp <- trait %>%
+  filter(!(sp %in% focal_sp)) %>%
   pull(sp) |>
   # setdiff(trait$sp) |>
   sort()
 
-rare_sp
+other_sp
 
-tibble(sp = abundant_sp, abund = "abundant") |>
-  bind_rows(tibble(sp = rare_sp, abund = "rare")) |>
+tibble(sp = focal_sp, group = "focal") |>
+  bind_rows(tibble(sp = other_sp, group = "other")) |>
   mutate(sp2 = str_replace_all(sp, "_", " ")) |>
   write_csv("data/note.csv")
 ```
 
 ```{r}
-plot_abundance(env, ab, rare_sp, rare_sp)
+plot_abundance(env, ab, other_sp, other_sp)
 ```

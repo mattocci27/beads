@@ -11,25 +11,29 @@ format:
     toc-depth: 2
     number-sections: true
     smooth-scroll: true
-    embed-resources: false
+    embed-resources: true
 ---
 
 ```{r, include=FALSE}
 library(tidyverse)
 library(picante)
-library(factoextra)
-library(mvtnorm)
+
 ```
 
 
 # Phylo
 
+The bundled reference tree is a snapshot of the previously distributed dummy tree.
+The original `qjzad.tre` is unavailable; this snapshot fixes the topology and branch
+lengths used for regeneration. Branch lengths are in arbitrary units.
+
 ```{r}
-tr <- read.tree("data-raw/qjzad.tre")
+set.seed(123)
+tr <- read.tree("data-raw/dummy_reference.newick")
 sp <- tr$tip.label
 tr_dist <- vcv(tr) |> cov2cor()
 
-phy_tr <- rmvnorm(2, rep(0, ncol(tr_dist)), tr_dist)
+phy_tr <- MASS::mvrnorm(2, rep(0, ncol(tr_dist)), tr_dist)
 
 tmp <- tibble(tmp = phy_tr[1, ], sp = colnames(tr_dist)) |>
   arrange(tmp)
@@ -38,7 +42,6 @@ tmp <- tibble(tmp = phy_tr[1, ], sp = colnames(tr_dist)) |>
 ## Mass artifact and phylogenetic signal
 
 ```{r}
-set.seed(123)
 d <- read_csv("data/nature02403-s2.csv", skip = 10) |>
   janitor::clean_names()
 
@@ -59,16 +62,14 @@ data |>
 ```
 
 
-Dummy LL is based on the regression of LL on LMA.
+Dummy LL follows the fitted log-scale regression of LL on LMA, with residual
+SD from that regression. This preserves the fitted conditional mean of log LL.
 
 ```{r}
 fit <- lm(log_ll ~ log_lma, data = data)
-sd_log_ll <- sd(data$log_ll, na.rm = TRUE)
-
-# coef(fit)[1]
 ll <- rlnorm(length(lma),
-             coef(fit)[1] + coef(fit)[2] * log_lma - sd_log_ll^2 / 2,
-             sd_log_ll)
+             meanlog = predict(fit, newdata = data),
+             sdlog = sigma(fit))
 ```
 
 
@@ -79,7 +80,8 @@ X_{MiK} = \bar{X_{Ai}} LMA_k^{-1} \epsilon_{Aik}
 $$
 
 For Amass,
-$\bar{X_{Ai}}$ = 11642 and $\epsilon_{Aik}$ = 0.55
+$\bar{X_{Ai}}$ = 11642. The multiplicative error has mean 1,
+with $\log \epsilon_{Aik} \sim N(-0.55^2/2, 0.55^2)$.
 
 
 ```{r}
@@ -140,19 +142,15 @@ data2 <- tibble(
 dummy_trait <- bind_cols(tmp, data2) |>
   arrange(-sm)
 
-# Find the rows containing the target species
-row_henryi <- which(dummy_trait$sp == "Lithocarpus_henryi")
-row_xylocarpus <- which(dummy_trait$sp == "Lithocarpus_xylocarpus")
-row_wattii <- which(dummy_trait$sp == "Castanopsis_wattii")
-
-# Swap the top row with Lithocarpus_henryi
-dummy_trait[c(1, row_henryi), 2] <- dummy_trait[c(row_henryi, 1), 2]
-
-# Swap the second row with Lithocarpus_xylocarpus
-dummy_trait[c(2, row_xylocarpus), 2] <- dummy_trait[c(row_xylocarpus, 2), 2]
-
-# Swap the third row with Castanopsis_wattii
-dummy_trait[c(3, row_wattii), 2] <- dummy_trait[c(row_wattii, 3), 2]
+# Assign the three largest seed masses to the focal Fagaceae species.
+# Recompute each position after swapping, since earlier swaps move labels.
+seed_species <- c("Lithocarpus_henryi", "Lithocarpus_xylocarpus",
+                  "Castanopsis_wattii")
+for (i in seq_along(seed_species)) {
+  target <- match(seed_species[i], dummy_trait$sp)
+  stopifnot(!is.na(target))
+  dummy_trait$sp[c(i, target)] <- dummy_trait$sp[c(target, i)]
+}
 
 dummy_trait <- dummy_trait |>
   arrange(sp)
@@ -189,10 +187,10 @@ sm_sp <- dummy_trait %>%
   pull(sp)
 
 # Extract unique and sorted species names in one step
-abundant_sp <- unique(c(lma_sp, sm_sp)) %>%
+focal_sp <- unique(c(lma_sp, sm_sp)) %>%
   sort()
 
-abundant_sp
+focal_sp
 ```
 
 # Check PCA
@@ -200,38 +198,13 @@ abundant_sp
 ```{r}
 pca_res <- prcomp(log(data2), scale = TRUE)
 
-fviz_pca_biplot(pca_res,
-                axis = c(1, 2),
-                axes.linetype = "dotted",
-                col.var = "black",
-                alpha.var = 0.9,
-                pointsize = 2.5,
-                alpha.ind = 0.1,
-                geom.ind = "point",
-                palette = c("#7570b3", "#1b9e77"),
-                addEllipses = TRUE,
-                ellipse.level = 0.95,
-                title = "",
-                arrowsize = 0.5,
-                #labelsize = 2,
-                label = "all",
-                mean.point = FALSE,
-                repel = TRUE)
+biplot(pca_res, choices = c(1, 2), cex = c(0.5, 0.8))
 ```
-
-```{r}
-tr2 <- chronos(tr, lambda=0)
-plot(tr)
-plot(tr2)
-```
-
 
 # Check k signal
 
 ```{r}
-tr2 <- chronos(tr, lambda=0)
-tr3 <- multi2di(tr2, random=TRUE)
-#tr$edge.length <- tr$edge.length + rnorm(length(tr$edge.length), 0, 0.01)
+tr3 <- tr # Keep the bundled topology and branch lengths fixed.
 
 physig_tb <- tibble()
 for (i in 3:10) {
@@ -263,40 +236,5 @@ tr3 |>
 # Environment
 
 ```{r}
-devtools::session_info()
-```
-
-
-```{r}
-knitr::knit_exit()
-```
-
-
-
-```{r}
-summary(a_mass)
-
-data |>
-  pull(log_amass) |>
-  exp() |>
-  summary()
-
-tmp <- data |>
-  pull(log_amass)
-
-summary(10^tmp)
-
-data |>
-  mutate(log_lma_inv = -log_lma) %>%
-  lm(log(a_mass) ~ log_lma_inv, data = .)
-```
-
-```{r}
-dummy_trait2 <- dummy_trait |>
-  arrange(lma)
-
-dummy_trait3 <- bind_cols(tmp, dummy_trait2)
-
-dummy_trait3 |>
-  DT::datatable()
+sessionInfo()
 ```
