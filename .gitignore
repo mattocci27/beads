@@ -112,3 +112,11 @@ dummy_com_files/*
 
 /.quarto/
 **/*.quarto_ipynb
+
+!data/abundance_adjustment.csv
+
+!data-raw/seed_mass_ranges.csv
+
+# Local abundance input and session logs
+/data/actual_abund.csv
+/logs/*.md

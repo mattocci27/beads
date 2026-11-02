@@ -5,8 +5,9 @@ date: "`r format(Sys.time(), '%B %d, %Y')`"
 fontsize: 12pt
 format:
   html:
-    theme: cosmo #readable #sandstone #spacelab #flatly
-    # highlight: pygments #tango #kate
+    theme:
+      - cosmo
+      - assets/offline-fonts.scss
     toc: true
     toc-depth: 2
     number-sections: true
@@ -113,7 +114,8 @@ p_mass <- rlnorm(length(lma),
                0.6)
 ```
 
-Wood density and seed mass are independent with the LES.
+Wood density and the initial seed-size score are generated independently of LES.
+The score is converted to genus-specific seed masses after species assignment.
 
 ```{r}
 wd <- rlnorm(length(lma),
@@ -152,6 +154,24 @@ for (i in seq_along(seed_species)) {
   dummy_trait$sp[c(i, target)] <- dummy_trait$sp[c(target, i)]
 }
 
+# Keep species assignments and other traits fixed, then replace the seed-size
+# score with a mass in mg. No additional random draws are needed.
+seed_ranges <- read_csv("data-raw/seed_mass_ranges.csv", show_col_types = FALSE)
+genus <- sub("_.*", "", dummy_trait$sp)
+bounds <- seed_ranges[match(genus, seed_ranges$genus), ]
+stopifnot(!anyNA(bounds), !anyDuplicated(seed_ranges$genus))
+u <- pnorm(as.numeric(scale(log(dummy_trait$sm))))
+dummy_trait$sm <- signif(exp(log(bounds$min_mg) +
+  u * (log(bounds$max_mg) - log(bounds$min_mg))), 5)
+
+# Rounded teaching anchors, informed by seed-size reports; these are simulated
+# values, not measured dry masses or copied species means.
+anchors <- c(Lithocarpus_xylocarpus = 6000, Lithocarpus_hancei = 2200,
+             Castanopsis_wattii = 1500, Machilus_yunnanensis = 1200)
+idx <- match(names(anchors), dummy_trait$sp)
+stopifnot(!anyNA(idx))
+dummy_trait$sm[idx] <- unname(anchors)
+
 dummy_trait <- dummy_trait |>
   arrange(sp)
 
@@ -168,7 +188,25 @@ Units are:
 - *N*~mass~ (%)
 - *P*~mass~ (%)
 - Wood density (g cm^-3^)
-- Seed mass (mg)
+- Seed mass (mg per seed; simulated size scale, not a measured dry-mass dataset)
+
+Seed mass uses the explicit genus-specific simulation bounds in
+`data-raw/seed_mass_ranges.csv`. Values are interpolated on the log scale using
+normal quantiles of the initial seed-size score. The bounds are broad teaching
+assumptions, not empirical species confidence intervals. Genus membership now
+contributes to seed-size structure; independence from LES is not imposed on the
+final values. The earlier label swaps retain the existing species assignments
+and other traits; they no longer guarantee the three largest seed masses.
+
+Rounded anchors for *L. xylocarpus*, *L. hancei*, *C. wattii* and
+*M. yunnanensis* follow the order of magnitude reported by
+[Lang & Wang (2016)](https://iforest.sisef.org/contents/?id=ifor1852-008).
+That study weighed intact refrigerated seeds after removing woody receptacles
+where applicable; it does not establish oven-dry seed mass. We therefore use
+these reports only as size guides. Small-seeded *Rhododendron* bounds are guided
+by the thousand-seed weights in
+[the Rhododendron seed-trait study (2014)](https://pmc.ncbi.nlm.nih.gov/articles/PMC4063484/).
+All values remain fictional exercise traits, including the rounded anchors.
 
 ```{r}
 dummy_trait |>
@@ -196,7 +234,7 @@ focal_sp
 # Check PCA
 
 ```{r}
-pca_res <- prcomp(log(data2), scale = TRUE)
+pca_res <- prcomp(log(as.data.frame(dummy_trait[, 3:10])), scale = TRUE)
 
 biplot(pca_res, choices = c(1, 2), cex = c(0.5, 0.8))
 ```

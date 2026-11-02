@@ -5,8 +5,9 @@ date: "`r format(Sys.time(), '%B %d, %Y')`"
 fontsize: 12pt
 format:
   html:
-    theme: cosmo #readable #sandstone #spacelab #flatly
-    # highlight: pygments #tango #kate
+    theme:
+      - cosmo
+      - assets/offline-fonts.scss
     toc: true
     toc-depth: 2
     number-sections: true
@@ -201,7 +202,7 @@ standardized log LMA, log wood density, and log seed mass, respectively:
 
 $$
 \begin{aligned}
-\beta_{0i} &= 5 + \epsilon_{0i}, \\
+\beta_{0i} &= 5 + 0.5 C_i + \epsilon_{0i}, \\
 \beta_{1i} &= -2 + 1.2 L_i + 0.3 W_i + \epsilon_{1i}, \\
 \beta_{2i} &= -1 + 0.8 S_i + \epsilon_{2i}, \\
 \beta_{3i} &= 0.3 L_i + \epsilon_{3i}, \\
@@ -216,12 +217,39 @@ preference. Weaker moisture and ridge × forest effects prevent very dry corners
 from becoming extreme abundance hotspots. The maps show relative spatial
 patterns; the simulated counts are not literal bead placement instructions.
 
+Species baseline abundance is weakly calibrated using `data/actual_abund.csv`.
+For species whose names match exactly, $C_i$ is standardized $\log(n_i+1)$,
+computed over the matched species and clipped to $[-1.5, 1.5]$.
+For species absent from that file, $C_i=0$; absence from the file is not treated
+as an observed zero. This multiplies expected abundance by approximately
+0.47–2.12 at every site for a given species, preserving its relative expected
+spatial distribution. The generated communities remain simulations rather
+than reconstructions of the observed community.
+
 High richness in valleys is intentional. Presence/absence metrics can be identical
 between sites even when abundances and community-weighted means differ.
 
 ```{r}
+actual_abund <- read_csv("data/actual_abund.csv", show_col_types = FALSE)
+stopifnot(all(c("latin", "n") %in% names(actual_abund)),
+          !anyNA(actual_abund$latin), !anyDuplicated(actual_abund$latin),
+          all(is.finite(actual_abund$n)), all(actual_abund$n >= 0))
+
+actual_n <- actual_abund$n[match(trait$sp, actual_abund$latin)]
+matched <- !is.na(actual_n)
+abundance_z <- rep(0, n_sp)
+# Unlisted species retain a neutral baseline. No random draws are added here.
+if (sum(matched) >= 2L && sd(log1p(actual_n[matched])) > 0) {
+  abundance_z[matched] <- as.numeric(scale(log1p(actual_n[matched])))
+}
+abundance_offset <- 0.5 * pmax(-1.5, pmin(1.5, abundance_z))
+
+tibble(sp = trait$sp, actual_n,
+       baseline_multiplier = exp(abundance_offset)) |>
+  write_csv("data/abundance_adjustment.csv")
+
 set.seed(456) # Independent of environmental generation and plotting.
-beta0 <- rnorm(n_sp, 5, 0.2)
+beta0 <- rnorm(n_sp, 5, 0.2) + abundance_offset
 
 beta1 <- rnorm(n_sp,
                mean = -2 + 1.2 * ts$lma + 0.3 * ts$wd,

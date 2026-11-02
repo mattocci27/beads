@@ -16,6 +16,16 @@ stopifnot(nrow(trait) == 77L, !anyDuplicated(trait$sp),
           all(samp$abund >= 0 & samp$abund == floor(samp$abund)),
           setequal(samp$Site, env$site), setequal(samp$Species, trait$sp),
           setequal(note$sp, trait$sp), setequal(note$group, c("focal", "other")))
+# Calibration must preserve the species pool, leave unlisted species neutral,
+# and stay within the agreed weak multiplicative adjustment.
+adjustment <- read.csv("data/abundance_adjustment.csv")
+actual <- read.csv("data/actual_abund.csv")
+stopifnot(identical(adjustment$sp, trait$sp),
+          isTRUE(all.equal(adjustment$actual_n,
+                           actual$n[match(trait$sp, actual$latin)])),
+          all(adjustment$baseline_multiplier[is.na(adjustment$actual_n)] == 1),
+          all(adjustment$baseline_multiplier >= exp(-0.75) - 1e-12),
+          all(adjustment$baseline_multiplier <= exp(0.75) + 1e-12))
 # Independently select each quadrat's four corners from the saved grid.
 for (i in seq_len(nrow(env))) {
   corners <- soil[soil$x %in% c(env$col[i]-1, env$col[i]) &
@@ -43,3 +53,13 @@ for (i in seq_len(nrow(mat))) {
                             weighted.mean(aligned$lma, mat[i, ]))))
 }
 cat("Validated 77 species, 60 sites, 4620 counts, four-corner means, raw-unit CWM and fixed reference tree.\n")
+
+# Seed masses must respect the documented genus-specific simulation bounds.
+bounds <- read.csv("data-raw/seed_mass_ranges.csv")
+matched <- bounds[match(sub("_.*", "", trait$sp), bounds$genus), ]
+stopifnot(!anyNA(matched), !anyDuplicated(bounds$genus),
+          all(trait$sm >= matched$min_mg),
+          all(trait$sm <= matched$max_mg),
+          trait$sm[trait$sp == "Lithocarpus_xylocarpus"] == 6000,
+          all(trait$sm[grepl("^Rhododendron_", trait$sp)] < 1))
+cat("Validated genus-specific seed mass ranges in mg per seed.\n")

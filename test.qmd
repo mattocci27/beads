@@ -21,3 +21,7 @@ colnames(new_m) <- paste0(rep(paste0("q", 1:6), each = 5), "_", rep(1:5, 6))
 
 new_m_sorted <- new_m[order(rownames(new_m)), ]
 ```
+
+```{r}
+library(tidyvers)
+```

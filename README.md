@@ -34,7 +34,15 @@ identify assembly processes.
 
 ## Data
 
+- `data/actual_abund.csv`: observed species totals (`latin, n`), used only to
+  weakly calibrate species baselines. Unlisted species are not assumed absent.
+- `data/abundance_adjustment.csv`: matched observed counts and the baseline
+  multiplier for each simulated species (approximately 0.47–2.12).
 - `data/dummy_trait.csv`: 77 species × 8 traits; units are listed in the notebooks.
+- `data-raw/seed_mass_ranges.csv`: genus-specific seed mass bounds (mg per seed),
+  used as teaching assumptions rather than measured species limits. Seed masses
+  span small seeds to nuts; rounded species anchors and sources are explained in
+  `dummy_data.qmd`. They are not measured dry masses.
 - `data/dummy_tree.newick`: the same 77 species; arbitrary branch-length units.
 - `data/samp.csv`: `Site, Species, abund`, including zero counts (60 × 77 rows).
 - `data/site_environment.csv`: one row per site, with coordinates, habitat,
@@ -86,7 +94,12 @@ of environmental generation. The 77-species pool is retained. The abundance
 model is tuned for scattering beads by eye: most species occupy broad valley areas, with a few ridge-preferring
 species. Moisture and ridge × forest effects are moderated to avoid a single
 species dominating small dry patches. The maps are relative distribution guides;
-no exact bead counts need to be followed. Numerical results differ from the old
+no exact bead counts need to be followed. Species baselines receive a weak
+observed-abundance correction: standardize `log(n + 1)` over species with exact
+name matches, clip to ±1.5, and add half this value to the log-scale intercept.
+Unmatched species receive no correction. Habitat coefficients are retained;
+within-species expected spatial proportions are preserved. This does not
+reconstruct the observed community. Numerical results differ from the old
 handout because LL, moisture averaging, reproducibility, and abundance
 coefficients have been corrected.
 
