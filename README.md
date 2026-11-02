@@ -35,7 +35,9 @@ identify assembly processes.
 ## Data
 
 - `data/actual_abund.csv`: observed species totals (`latin, n`), used only to
-  weakly calibrate species baselines. Unlisted species are not assumed absent.
+  weakly calibrate species baselines. This local instructor input is excluded
+  from Git and is not needed for the student exercise. Unlisted species are
+  not assumed absent.
 - `data/abundance_adjustment.csv`: matched observed counts and the baseline
   multiplier for each simulated species (approximately 0.47–2.12).
 - `data/dummy_trait.csv`: 77 species × 8 traits; units are listed in the notebooks.
@@ -78,7 +80,11 @@ lockfile until that container is rebuilt separately.
 
 ## Regenerate teaching materials
 
-With Quarto and the packages above installed, run from this directory:
+Instructor-only regeneration requires the local `data/actual_abund.csv`
+(`latin, n`), which is intentionally excluded from Git. Keep the supplied
+generated CSVs for class; students do not need that local input.
+
+With that input, Quarto and the packages above installed, run from this directory:
 
 ```sh
 quarto render dummy_data.qmd
@@ -109,16 +115,25 @@ recovery of the missing original `qjzad.tre`. Regeneration fixes this snapshot's
 topology and branch lengths rather than rerunning tree dating or randomly
 resolving polytomies. Trait values and species assignments are regenerated.
 
-## Companion lecture correction
+## Companion lecture
 
-`patches/phy-fun-div-cwm.patch` changes the companion notebook to use raw traits
-for CWM, corrects its matrix-orientation explanation, and fixes trait-unit typos.
-From the `phy-fun-div` directory, apply it and regenerate its handout:
+The companion lecture intentionally uses log-trait CWM. Do not apply
+`patches/phy-fun-div-cwm.patch`: it is an older proposal that changes that
+teaching choice. This repository's exercise uses raw-unit CWM and a separate
+60-site community dataset. Its regenerated trait values are not automatically
+synchronized with the companion lecture.
 
-```sh
-git apply ../beads/patches/phy-fun-div-cwm.patch
-quarto render diversity_example.qmd
-```
+## Classroom readiness
 
-The patch does not replace the lecture repository's separate, small example
-dataset. To analyze the 60-site dataset, use this repository's exercise.
+Use `dummy_com.html` for the habitat and species distribution maps, and
+`community_analysis.qmd` / `.html` for analysis. Scatter beads by the relative
+patterns in the maps rather than following literal simulated counts.
+Prepare R packages before class; the supplied HTML can be read without R.
+
+In the current data, richness ranges from 65 to 77 species and 46 of 60 sites
+contain the full species pool. Their unweighted functional MPD SES is undefined
+and displayed as NA. Use abundance-sensitive metrics (Shannon and CWM) to
+compare those sites; do not expect every presence/absence metric to differ.
+Run `Rscript scripts/check_data.R` to check the supplied data. Without the local
+observed-abundance file, it validates the saved calibration bounds but skips
+comparison against the original private input.
